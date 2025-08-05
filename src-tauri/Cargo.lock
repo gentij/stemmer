@@ -3501,9 +3501,9 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "stem-splitter-core"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4effdcd962b63161eba1ec49c73ac80853cc6996b519183af955eaaddf72f5ba"
+checksum = "223d28a1819089d688e3879016e7498e5e56dd8bde5c7952e65d4e512deaa903"
 dependencies = [
  "anyhow",
  "hound",
