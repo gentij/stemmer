@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Music } from "lucide-vue-next";
 import { TOOLS, type ToolId } from "@/constants/tools";
+import ThemeToggle from "@/components/ThemeToggle.vue";
 
 const tools = Object.entries(TOOLS).map(([id, tool]) => ({
   id: id as ToolId,
@@ -26,14 +27,17 @@ const handleToolClick = (toolId: string, available: boolean) => {
 <template>
   <div class="h-full bg-card border-r border-border flex flex-col">
     <div class="p-6 border-b border-border">
-      <div class="flex items-center space-x-3">
-        <div class="p-2 rounded-lg bg-primary/10">
-          <Music class="h-6 w-6 text-primary" />
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 rounded-lg bg-primary/10">
+            <Music class="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Stemmer</h1>
+            <p class="text-sm text-muted-foreground">Audio Processing Suite</p>
+          </div>
         </div>
-        <div>
-          <h1 class="text-xl font-bold">Stemmer</h1>
-          <p class="text-sm text-muted-foreground">Audio Processing Suite</p>
-        </div>
+        <ThemeToggle />
       </div>
     </div>
 
