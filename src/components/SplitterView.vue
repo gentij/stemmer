@@ -10,6 +10,7 @@ const store = useStemStore();
 
 const processStemSeparation = () => {
   console.log("Processing stem separation...");
+  store.spliStems();
 };
 </script>
 

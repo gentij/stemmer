@@ -1,4 +1,5 @@
 import { formatTime } from "@/lib/utils";
+import { splitStems } from "@/services/splitStems";
 import { defineStore } from "pinia";
 import type WaveSurfer from "wavesurfer.js";
 
@@ -117,6 +118,15 @@ export const useStemStore = defineStore("stem", {
     skipBackward(seconds: number = 10) {
       const newTime = Math.max(this.currentTime - seconds, 0);
       this.seek(newTime);
+    },
+
+    async spliStems() {
+      try {
+        const result = await splitStems();
+        console.log("✅ Done:", result);
+      } catch (err) {
+        console.error("❌ Split failed:", err);
+      }
     },
 
     reset() {
