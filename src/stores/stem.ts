@@ -1,5 +1,5 @@
 import { formatTime } from "@/lib/utils";
-import { splitStems } from "@/services/splitStems";
+import { splitStems, SplitStemsParams } from "@/services/splitStems";
 import { defineStore } from "pinia";
 import type WaveSurfer from "wavesurfer.js";
 
@@ -60,7 +60,7 @@ export const useStemStore = defineStore("stem", {
         this.duration = this.wavesurfer?.getDuration() || 0;
       });
 
-      this.wavesurfer.on("loading", (progress: number) => {});
+      this.wavesurfer.on("loading", (progress: number) => { });
 
       this.wavesurfer.on("error", (error: any) => {
         console.error("WaveSurfer error:", error);
@@ -121,11 +121,13 @@ export const useStemStore = defineStore("stem", {
     },
 
     async spliStems() {
-      try {
-        const result = await splitStems();
-        console.log("✅ Done:", result);
-      } catch (err) {
-        console.error("❌ Split failed:", err);
+      if (this.audioPath) {
+        try {
+          const result = await splitStems({ input: this.audioPath, output: "output" });
+          console.log("✅ Done:", result);
+        } catch (err) {
+          console.error("❌ Split failed:", err);
+        }
       }
     },
 

@@ -7,8 +7,8 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn split_stems() -> Result<String, String> {
-    stem_splitter::split()
+fn split_stems(input: &str, output: &str) -> Result<String, String> {
+    stem_splitter::split(input, output)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

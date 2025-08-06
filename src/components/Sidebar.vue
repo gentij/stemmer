@@ -33,8 +33,8 @@ const handleToolClick = (toolId: string, available: boolean) => {
             <Music class="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 class="text-xl font-bold">Stemmer</h1>
-            <p class="text-sm text-muted-foreground">Audio Processing Suite</p>
+            <h1 class="text-2xl font-bold">Stemmer</h1>
+            <p class="text-muted-foreground">Audio Processing Suite</p>
           </div>
         </div>
         <ThemeToggle />
@@ -43,17 +43,11 @@ const handleToolClick = (toolId: string, available: boolean) => {
 
     <div class="flex-1 p-4 space-y-2">
       <div v-for="tool in tools" :key="tool.id">
-        <Button
-          variant="ghost"
-          class="w-full justify-start p-4 h-auto"
-          :class="{
-            'bg-primary/10 text-primary':
-              activeTool === tool.id && tool.available,
-            'opacity-50 cursor-not-allowed': !tool.available,
-          }"
-          @click="handleToolClick(tool.id, tool.available)"
-          :disabled="!tool.available"
-        >
+        <Button variant="ghost" class="w-full justify-start p-4 h-auto" :class="{
+          'bg-primary/10 text-primary':
+            activeTool === tool.id && tool.available,
+          'opacity-50 cursor-not-allowed': !tool.available,
+        }" @click="handleToolClick(tool.id, tool.available)" :disabled="!tool.available">
           <div class="flex items-center space-x-3 w-full">
             <div class="p-2 rounded-lg bg-background">
               <component :is="tool.icon" class="h-5 w-5" />

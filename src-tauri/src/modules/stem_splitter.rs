@@ -1,10 +1,10 @@
 use stem_splitter_core::{split_file, SplitConfig};
 
-pub fn split() -> Result<String, String> {
+pub fn split(input: &str, output: &str) -> Result<String, String> {
     println!("split_file method called");
-    let config = SplitConfig::default().output_dir("output");
+    let config = SplitConfig::default().output_dir(output);
 
-    let result = split_file("assets/test.wav", config).expect("Pipeline failed");
+    let result = split_file(input, config).expect("Pipeline failed");
 
     println!(
         "✅ Split complete: vocals={}, drums={}, bass={}, other={}",
