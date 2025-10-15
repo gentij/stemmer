@@ -31,6 +31,7 @@ export const useAudioCoreStore = defineStore("audioCore", {
     // Optional aliases for future readability (keep current names too)
     isWaveformReady: (s) => s.isReady,
     isWaveformLoading: (s) => s.isLoading,
+    hasSource: (s) => !!s.audioFile || !!s.audioPath,
   },
 
   actions: {

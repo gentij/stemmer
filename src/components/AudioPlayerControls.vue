@@ -11,21 +11,15 @@ import {
   VolumeX,
   RotateCcw,
 } from "lucide-vue-next";
+import { storeToRefs } from "pinia";
 
-const {
-  setVolume,
-  volume,
-  skipBackward,
-  isReady,
-  togglePlayPause,
-  isPlaying,
-  skipForward,
-  seek,
-  pause,
-  formattedCurrentTime,
-  formattedDuration,
-} = useAudioCoreStore();
 const showVolumeSlider = ref(false);
+
+const store = useAudioCoreStore();
+const { volume, isReady, isPlaying, formattedCurrentTime, formattedDuration } =
+  storeToRefs(store);
+const { setVolume, skipBackward, togglePlayPause, skipForward, seek, pause } =
+  store;
 
 const handleVolumeChange = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -33,7 +27,7 @@ const handleVolumeChange = (event: Event) => {
 };
 
 const toggleMute = () => {
-  setVolume(volume > 0 ? 0 : 0.7);
+  setVolume(volume.value > 0 ? 0 : 0.7);
 };
 </script>
 

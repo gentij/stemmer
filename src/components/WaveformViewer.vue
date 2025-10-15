@@ -1,30 +1,25 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import WaveSurfer from "wavesurfer.js";
-
 import { useAudioCoreStore } from "@/stores/audio-core.store";
+import { storeToRefs } from "pinia";
 
+const store = useAudioCoreStore();
 const {
-  setWavesurfer,
   duration,
-  seek,
   isLoading,
   isReady,
   formattedCurrentTime,
   formattedDuration,
   progress,
-} = useAudioCoreStore();
+} = storeToRefs(store);
+const { setWavesurfer, seek } = store;
 
 const waveformContainer = ref<HTMLDivElement | null>(null);
 let cleanupClick: (() => void) | null = null;
 
 onMounted(() => {
   if (!waveformContainer.value) return;
-
-  const audioElement = document.createElement("audio");
-  audioElement.controls = false;
-  audioElement.preload = "auto";
-  audioElement.crossOrigin = "anonymous";
 
   const wavesurfer = WaveSurfer.create({
     container: waveformContainer.value,
@@ -36,7 +31,7 @@ onMounted(() => {
     height: 100,
     normalize: true,
     fillParent: true,
-    media: audioElement,
+    // keep it simple; you don't need a custom media element unless you have a reason
     autoplay: false,
     interact: true,
   });
@@ -44,16 +39,16 @@ onMounted(() => {
   setWavesurfer(wavesurfer);
 
   const onClick = (e: MouseEvent) => {
-    if (!wavesurfer || duration <= 0) return;
+    // read the current value reactively
+    const d = duration.value;
+    if (!wavesurfer || d <= 0) return;
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
     const pct = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
-    seek(pct * duration);
+    seek(pct * d);
   };
   waveformContainer.value.addEventListener("click", onClick);
-
-  cleanupClick = () => {
+  cleanupClick = () =>
     waveformContainer.value?.removeEventListener("click", onClick);
-  };
 });
 
 onBeforeUnmount(() => {

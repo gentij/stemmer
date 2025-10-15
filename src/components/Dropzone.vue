@@ -4,12 +4,14 @@ import { useAudioCoreStore } from "@/stores/audio-core.store";
 import { Button } from "@/components/ui/button";
 import { Upload, FileAudio, X } from "lucide-vue-next";
 
-// Tauri v2 APIs
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { basename } from "@tauri-apps/api/path";
+import { storeToRefs } from "pinia";
 
-const { loadFileFromPath, reset, audioPath } = useAudioCoreStore();
+const store = useAudioCoreStore();
+const { audioPath } = storeToRefs(store);
+const { loadFileFromPath, reset } = store;
 
 const isDragging = ref(false);
 const displayName = ref<string | null>(null);

@@ -9,24 +9,32 @@ import { Button } from "@/components/ui/button";
 import { Music, Waves, Scissors } from "lucide-vue-next";
 
 import { basename } from "@tauri-apps/api/path";
+import { storeToRefs } from "pinia";
 
-const { audioFile, audioPath, isReady, duration, formattedDuration, reset } =
-  useAudioCoreStore();
-const { split } = useSplitterToolStore();
+const audioCoreStore = useAudioCoreStore();
+const splitterToolStore = useSplitterToolStore();
+
+const { audioFile, audioPath, hasSource, duration, formattedDuration } =
+  storeToRefs(audioCoreStore);
+const { canProcess } = storeToRefs(splitterToolStore);
+
+const { reset } = audioCoreStore;
+const { split } = splitterToolStore;
 
 const displayName = ref<string>("");
 
 async function refreshDisplayName() {
-  if (audioFile) {
-    displayName.value = audioFile.name;
+  if (audioFile.value) {
+    displayName.value = audioFile.value.name;
     return;
   }
-  if (audioPath) {
+  if (audioPath.value) {
     try {
-      displayName.value = await basename(audioPath);
+      displayName.value = await basename(audioPath.value);
     } catch {
       // fallback if basename fails
-      displayName.value = audioPath.split(/[\\/]/).pop() ?? audioPath;
+      displayName.value =
+        audioPath.value.split(/[\\/]/).pop() ?? audioPath.value;
     }
     return;
   }
@@ -44,10 +52,6 @@ watch(
 const processStemSeparation = () => {
   split();
 };
-
-// Helpers for template logic
-const hasSource = () => !!audioFile || !!audioPath;
-const canProcess = () => !!audioPath && isReady;
 </script>
 
 <template>
@@ -71,7 +75,7 @@ const canProcess = () => !!audioPath && isReady;
     <div class="flex-1 overflow-auto">
       <div class="max-w-6xl mx-auto p-6 space-y-8">
         <!-- Upload view when nothing is loaded -->
-        <div v-if="!hasSource()" class="text-center space-y-6">
+        <div v-if="!hasSource" class="text-center space-y-6">
           <div class="mb-8">
             <h2 class="text-3xl font-bold mb-4">Upload Your Audio File</h2>
             <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -177,7 +181,7 @@ const canProcess = () => !!audioPath && isReady;
               <Button variant="outline" size="sm" @click="reset()"
                 >Replace File</Button
               >
-              <Button :disabled="!canProcess()" @click="processStemSeparation">
+              <Button :disabled="!canProcess" @click="processStemSeparation">
                 <Scissors class="h-4 w-4 mr-2" />
                 Process Stems
               </Button>
