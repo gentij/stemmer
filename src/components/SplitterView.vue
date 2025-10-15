@@ -1,17 +1,53 @@
 <script setup lang="ts">
+import { ref, watch } from "vue";
 import { useStemStore } from "@/stores/stem";
 import Dropzone from "@/components/Dropzone.vue";
 import WaveformViewer from "@/components/WaveformViewer.vue";
 import AudioPlayerControls from "@/components/AudioPlayerControls.vue";
 import { Button } from "@/components/ui/button";
-import { Music, Waves, Scissors, Download, Loader2 } from "lucide-vue-next";
+import { Music, Waves, Scissors } from "lucide-vue-next";
+
+// For deriving a nice name from a filesystem path (Tauri v2)
+import { basename } from "@tauri-apps/api/path";
 
 const store = useStemStore();
 
+// Display name that works for both File and path
+const displayName = ref<string>("");
+
+async function refreshDisplayName() {
+  if (store.audioFile) {
+    displayName.value = store.audioFile.name;
+    return;
+  }
+  if (store.audioPath) {
+    try {
+      displayName.value = await basename(store.audioPath);
+    } catch {
+      // fallback if basename fails
+      displayName.value =
+        store.audioPath.split(/[\\/]/).pop() ?? store.audioPath;
+    }
+    return;
+  }
+  displayName.value = "";
+}
+
+watch(
+  [() => store.audioFile, () => store.audioPath],
+  () => {
+    void refreshDisplayName();
+  },
+  { immediate: true }
+);
+
 const processStemSeparation = () => {
-  console.log("Processing stem separation...");
-  store.spliStems();
+  store.splitStems();
 };
+
+// Helpers for template logic
+const hasSource = () => !!store.audioFile || !!store.audioPath;
+const canProcess = () => !!store.audioPath && store.isReady;
 </script>
 
 <template>
@@ -34,7 +70,8 @@ const processStemSeparation = () => {
 
     <div class="flex-1 overflow-auto">
       <div class="max-w-6xl mx-auto p-6 space-y-8">
-        <div v-if="!store.audioFile" class="text-center space-y-6">
+        <!-- Upload view when nothing is loaded -->
+        <div v-if="!hasSource()" class="text-center space-y-6">
           <div class="mb-8">
             <h2 class="text-3xl font-bold mb-4">Upload Your Audio File</h2>
             <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -50,9 +87,15 @@ const processStemSeparation = () => {
 
           <div class="mt-12">
             <h3 class="text-xl font-semibold mb-6">What you'll get:</h3>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-              <div class="p-4 bg-card border border-border rounded-lg text-center">
-                <div class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+            <div
+              class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto"
+            >
+              <div
+                class="p-4 bg-card border border-border rounded-lg text-center"
+              >
+                <div
+                  class="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mx-auto mb-3"
+                >
                   <Music class="h-6 w-6 text-green-500" />
                 </div>
                 <h4 class="font-medium mb-1">Vocals</h4>
@@ -61,16 +104,24 @@ const processStemSeparation = () => {
                 </p>
               </div>
 
-              <div class="p-4 bg-card border border-border rounded-lg text-center">
-                <div class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+              <div
+                class="p-4 bg-card border border-border rounded-lg text-center"
+              >
+                <div
+                  class="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mx-auto mb-3"
+                >
                   <Music class="h-6 w-6 text-blue-500" />
                 </div>
                 <h4 class="font-medium mb-1">Drums</h4>
                 <p class="text-sm text-muted-foreground">Drum kit separation</p>
               </div>
 
-              <div class="p-4 bg-card border border-border rounded-lg text-center">
-                <div class="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+              <div
+                class="p-4 bg-card border border-border rounded-lg text-center"
+              >
+                <div
+                  class="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mx-auto mb-3"
+                >
                   <Music class="h-6 w-6 text-purple-500" />
                 </div>
                 <h4 class="font-medium mb-1">Bass</h4>
@@ -79,8 +130,12 @@ const processStemSeparation = () => {
                 </p>
               </div>
 
-              <div class="p-4 bg-card border border-border rounded-lg text-center">
-                <div class="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+              <div
+                class="p-4 bg-card border border-border rounded-lg text-center"
+              >
+                <div
+                  class="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mx-auto mb-3"
+                >
                   <Music class="h-6 w-6 text-orange-500" />
                 </div>
                 <h4 class="font-medium mb-1">Other</h4>
@@ -92,29 +147,41 @@ const processStemSeparation = () => {
           </div>
         </div>
 
-        <div v-if="store.audioFile" class="space-y-6">
-          <div class="flex items-center justify-between p-6 bg-card border border-border rounded-lg">
+        <!-- Player / details when a File OR Path is set -->
+        <div v-else class="space-y-6">
+          <div
+            class="flex items-center justify-between p-6 bg-card border border-border rounded-lg"
+          >
             <div class="flex items-center space-x-4">
               <div class="p-3 rounded-lg bg-primary/10">
                 <Music class="h-6 w-6 text-primary" />
               </div>
               <div>
                 <h3 class="text-lg font-semibold">
-                  {{ store.audioFile.name }}
+                  {{ displayName || (store.audioPath ?? "") }}
                 </h3>
                 <p class="text-muted-foreground">
-                  {{ (store.audioFile.size / (1024 * 1024)).toFixed(1) }} MB
-                  <span v-if="store.duration > 0">
-                    • {{ store.formattedDuration }}</span>
+                  <!-- Show size if we actually have a File -->
+                  <template v-if="store.audioFile">
+                    {{ (store.audioFile.size / (1024 * 1024)).toFixed(1) }} MB
+                    <span v-if="store.duration > 0">
+                      • {{ store.formattedDuration }}</span
+                    >
+                  </template>
+                  <template v-else>
+                    <span v-if="store.duration > 0">{{
+                      store.formattedDuration
+                    }}</span>
+                  </template>
                 </p>
               </div>
             </div>
 
             <div class="flex items-center space-x-3">
-              <Button variant="outline" size="sm" @click="store.reset()">
-                Replace File
-              </Button>
-              <Button :disabled="!store.isReady" @click="processStemSeparation">
+              <Button variant="outline" size="sm" @click="store.reset()"
+                >Replace File</Button
+              >
+              <Button :disabled="!canProcess()" @click="processStemSeparation">
                 <Scissors class="h-4 w-4 mr-2" />
                 Process Stems
               </Button>
@@ -158,8 +225,10 @@ const processStemSeparation = () => {
               <div class="space-y-3">
                 <label class="flex items-center space-x-2 text-sm">
                   <input type="checkbox" disabled class="rounded" />
-                  <span>High Quality Mode
-                    <span class="text-muted-foreground">(Slower)</span></span>
+                  <span
+                    >High Quality Mode
+                    <span class="text-muted-foreground">(Slower)</span></span
+                  >
                 </label>
                 <label class="flex items-center space-x-2 text-sm">
                   <input type="checkbox" disabled class="rounded" />
@@ -171,7 +240,9 @@ const processStemSeparation = () => {
                 </label>
               </div>
             </div>
-            <div class="mt-4 p-3 bg-muted/50 rounded text-sm text-muted-foreground">
+            <div
+              class="mt-4 p-3 bg-muted/50 rounded text-sm text-muted-foreground"
+            >
               <strong>Note:</strong> Stem separation processing is coming soon.
               For now, you can upload and preview your audio files.
             </div>

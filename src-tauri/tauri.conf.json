@@ -13,12 +13,13 @@
     "windows": [
       {
         "title": "stemmer",
-        "width": 800,
+        "width": 1200,
         "height": 600
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": ["default"]
     }
   },
   "bundle": {

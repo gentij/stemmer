@@ -1,62 +1,104 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useStemStore } from "@/stores/stem";
 import { Button } from "@/components/ui/button";
 import { Upload, FileAudio, X } from "lucide-vue-next";
 
+// Tauri v2 APIs
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { listen, TauriEvent } from "@tauri-apps/api/event";
+import { basename } from "@tauri-apps/api/path";
+
 const store = useStemStore();
+
 const isDragging = ref(false);
-const fileInputRef = ref<HTMLInputElement | null>(null);
+const displayName = ref<string | null>(null);
 
-const handleDrop = async (e: DragEvent) => {
-  e.preventDefault();
-  isDragging.value = false;
+let unlistenEnter: (() => void) | null = null;
+let unlistenLeave: (() => void) | null = null;
+let unlistenDrop: (() => void) | null = null;
 
-  const files = e.dataTransfer?.files;
-  if (files && files.length > 0) {
-    const file = files[0];
-    if (isAudioFile(file)) {
-      store.loadFile(file);
-    }
+const AUDIO_EXT = /\.(mp3|wav|m4a|flac|ogg|aac)$/i;
+
+function isAudioPath(path: string) {
+  return AUDIO_EXT.test(path);
+}
+
+async function handlePickedPath(path: string) {
+  if (!isAudioPath(path)) return;
+
+  await store.loadFileFromPath(path);
+
+  try {
+    displayName.value = await basename(path);
+  } catch {
+    displayName.value = path.split(/[\\/]/).pop() ?? path;
   }
-};
+}
 
-const openFileDialog = () => {
-  fileInputRef.value?.click();
-};
+async function openFileDialog() {
+  const picked = await openDialog({
+    title: "Select an audio file",
+    multiple: false,
+    filters: [
+      {
+        name: "Audio",
+        extensions: ["mp3", "wav", "m4a", "flac", "ogg", "aac"],
+      },
+    ],
+  });
 
-const handleFileInput = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  if (file && isAudioFile(file)) {
-    store.loadFile(file);
+  if (typeof picked === "string") {
+    await handlePickedPath(picked);
   }
-};
+}
 
-const isAudioFile = (file: File): boolean => {
-  return (
-    file.type.startsWith("audio/") ||
-    /\.(mp3|wav|m4a|flac|ogg|aac)$/i.test(file.name)
-  );
-};
-
-const clearFile = () => {
+function clearFile() {
   store.reset();
-};
+  displayName.value = null;
+}
+
+onMounted(async () => {
+  // Drag in/out visual feedback
+  unlistenEnter = await listen(TauriEvent.DRAG_ENTER, () => {
+    isDragging.value = true;
+  });
+
+  unlistenLeave = await listen(TauriEvent.DRAG_LEAVE, () => {
+    isDragging.value = false;
+  });
+
+  // Actual drop: gives absolute filesystem paths
+  unlistenDrop = await listen<string[]>(TauriEvent.DRAG_DROP, async (event) => {
+    isDragging.value = false;
+    const paths = event.payload;
+    if (Array.isArray(paths) && paths.length > 0) {
+      await handlePickedPath(paths[0]);
+    }
+  });
+});
+
+onBeforeUnmount(() => {
+  unlistenEnter?.();
+  unlistenLeave?.();
+  unlistenDrop?.();
+});
 </script>
 
 <template>
   <div class="w-full">
-    <div v-if="store.audioFile" class="space-y-4">
+    <div v-if="store.audioPath" class="space-y-4">
       <div
         class="flex items-center justify-between p-4 bg-card border border-border rounded-lg"
       >
         <div class="flex items-center space-x-3">
           <FileAudio class="h-5 w-5 text-primary" />
           <div>
-            <p class="font-medium">{{ store.audioFile.name }}</p>
-            <p class="text-sm text-muted-foreground">
-              {{ (store.audioFile.size / (1024 * 1024)).toFixed(1) }} MB
+            <p class="font-medium">
+              {{ displayName || store.audioPath }}
+            </p>
+            <p class="text-xs text-muted-foreground break-all">
+              {{ store.audioPath }}
             </p>
           </div>
         </div>
@@ -68,9 +110,6 @@ const clearFile = () => {
 
     <div v-else>
       <div
-        @dragover.prevent="isDragging = true"
-        @dragleave="isDragging = false"
-        @drop="handleDrop"
         class="relative w-full h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:border-primary/50 hover:bg-muted/20"
         :class="{
           'border-primary bg-primary/10': isDragging,
@@ -88,7 +127,7 @@ const clearFile = () => {
             {{ isDragging ? "Drop your audio file here" : "Upload audio file" }}
           </p>
           <p class="text-sm text-muted-foreground mb-4">
-            Drag and drop or click to browse
+            Drag & drop anywhere in the window, or click to browse
           </p>
           <p class="text-xs text-muted-foreground">
             Supports MP3, WAV, M4A, FLAC, OGG, AAC
@@ -99,14 +138,6 @@ const clearFile = () => {
           <Upload class="h-4 w-4 mr-2" />
           Choose File
         </Button>
-
-        <input
-          ref="fileInputRef"
-          type="file"
-          accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"
-          @change="handleFileInput"
-          class="hidden"
-        />
       </div>
     </div>
   </div>

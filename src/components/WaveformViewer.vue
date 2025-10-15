@@ -1,65 +1,47 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import WaveSurfer from "wavesurfer.js";
 import { useStemStore } from "@/stores/stem";
 
 const store = useStemStore();
 const waveformContainer = ref<HTMLDivElement | null>(null);
 
-onMounted(async () => {
+onMounted(() => {
   if (!waveformContainer.value) return;
 
-  try {
-    const wavesurfer = WaveSurfer.create({
-      container: waveformContainer.value,
-      waveColor: "#4f46e5",
-      progressColor: "#8b5cf6",
-      cursorColor: "#ec4899",
-      barWidth: 2,
-      barGap: 1,
-      height: 100,
-      normalize: true,
-      fillParent: true,
-    });
+  const wavesurfer = WaveSurfer.create({
+    container: waveformContainer.value,
+    waveColor: "#4f46e5",
+    progressColor: "#8b5cf6",
+    cursorColor: "#ec4899",
+    barWidth: 2,
+    barGap: 1,
+    height: 100,
+    normalize: true,
+    fillParent: true,
+  });
 
-    store.setWavesurfer(wavesurfer);
+  // Hand WS to the store; the store will:
+  // - attach events
+  // - load whatever is currently selected (path or File) via its internal logic
+  store.setWavesurfer(wavesurfer);
 
-    if (store.audioFile) {
-      await loadAudioFile(store.audioFile);
-    }
-  } catch (error) {
-    console.error("Error initializing WaveSurfer:", error);
-    store.isLoading = false;
-  }
-});
+  // Optional: click-to-seek on the waveform container
+  const onClick = (e: MouseEvent) => {
+    if (!store.wavesurfer || store.duration <= 0) return;
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+    const pct = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    store.seek(pct * store.duration);
+  };
+  waveformContainer.value.addEventListener("click", onClick);
 
-const loadAudioFile = async (file: File) => {
-  if (!store.wavesurfer) return;
-
-  try {
-    console.log("Loading audio file:", file.name, file.type);
-    store.isLoading = true;
-    store.isReady = false;
-
-    store.wavesurfer.loadBlob(file);
-  } catch (error) {
-    console.error("Error loading audio file:", error);
-    store.isLoading = false;
-    store.isReady = false;
-  }
-};
-
-watch(
-  () => store.audioFile,
-  async (newFile) => {
-    if (newFile && store.wavesurfer) {
-      await loadAudioFile(newFile);
-    }
-  }
-);
-
-onUnmounted(() => {
-  store.reset();
+  // Cleanup
+  onUnmounted(() => {
+    waveformContainer.value?.removeEventListener("click", onClick);
+    // If you want to preserve audio state when navigating away,
+    // remove the next line. Otherwise this mirrors your previous behavior.
+    store.reset();
+  });
 });
 </script>
 
@@ -85,10 +67,10 @@ onUnmounted(() => {
       </div>
 
       <div
-        v-if="!store.audioFile && !store.isLoading"
+        v-if="!store.isReady && !store.isLoading"
         class="absolute inset-0 flex items-center justify-center bg-muted/20 rounded-lg"
       >
-        <span class="text-muted-foreground text-sm">No audio file loaded</span>
+        <span class="text-muted-foreground text-sm">No audio loaded</span>
       </div>
     </div>
 
