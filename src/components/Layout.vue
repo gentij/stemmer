@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import Sidebar from "@/components/Sidebar.vue";
-import SplitterView from "@/components/SplitterView.vue";
+import SplitterView from "@/views/splitter/SplitterView.vue";
 import ComingSoon from "@/components/ComingSoon.vue";
 import {
   TOOLS,

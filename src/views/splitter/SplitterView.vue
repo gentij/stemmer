@@ -1,32 +1,32 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { useStemStore } from "@/stores/stem";
+import { useAudioCoreStore } from "@/stores/audio-core.store";
+import { useSplitterToolStore } from "@/stores/splitter-tool.store";
 import Dropzone from "@/components/Dropzone.vue";
 import WaveformViewer from "@/components/WaveformViewer.vue";
 import AudioPlayerControls from "@/components/AudioPlayerControls.vue";
 import { Button } from "@/components/ui/button";
 import { Music, Waves, Scissors } from "lucide-vue-next";
 
-// For deriving a nice name from a filesystem path (Tauri v2)
 import { basename } from "@tauri-apps/api/path";
 
-const store = useStemStore();
+const { audioFile, audioPath, isReady, duration, formattedDuration, reset } =
+  useAudioCoreStore();
+const { split } = useSplitterToolStore();
 
-// Display name that works for both File and path
 const displayName = ref<string>("");
 
 async function refreshDisplayName() {
-  if (store.audioFile) {
-    displayName.value = store.audioFile.name;
+  if (audioFile) {
+    displayName.value = audioFile.name;
     return;
   }
-  if (store.audioPath) {
+  if (audioPath) {
     try {
-      displayName.value = await basename(store.audioPath);
+      displayName.value = await basename(audioPath);
     } catch {
       // fallback if basename fails
-      displayName.value =
-        store.audioPath.split(/[\\/]/).pop() ?? store.audioPath;
+      displayName.value = audioPath.split(/[\\/]/).pop() ?? audioPath;
     }
     return;
   }
@@ -34,7 +34,7 @@ async function refreshDisplayName() {
 }
 
 watch(
-  [() => store.audioFile, () => store.audioPath],
+  [() => audioFile, () => audioPath],
   () => {
     void refreshDisplayName();
   },
@@ -42,12 +42,12 @@ watch(
 );
 
 const processStemSeparation = () => {
-  store.splitStems();
+  split();
 };
 
 // Helpers for template logic
-const hasSource = () => !!store.audioFile || !!store.audioPath;
-const canProcess = () => !!store.audioPath && store.isReady;
+const hasSource = () => !!audioFile || !!audioPath;
+const canProcess = () => !!audioPath && isReady;
 </script>
 
 <template>
@@ -158,27 +158,23 @@ const canProcess = () => !!store.audioPath && store.isReady;
               </div>
               <div>
                 <h3 class="text-lg font-semibold">
-                  {{ displayName || (store.audioPath ?? "") }}
+                  {{ displayName || (audioPath ?? "") }}
                 </h3>
                 <p class="text-muted-foreground">
                   <!-- Show size if we actually have a File -->
-                  <template v-if="store.audioFile">
-                    {{ (store.audioFile.size / (1024 * 1024)).toFixed(1) }} MB
-                    <span v-if="store.duration > 0">
-                      • {{ store.formattedDuration }}</span
-                    >
+                  <template v-if="audioFile">
+                    {{ (audioFile.size / (1024 * 1024)).toFixed(1) }} MB
+                    <span v-if="duration > 0"> • {{ formattedDuration }}</span>
                   </template>
                   <template v-else>
-                    <span v-if="store.duration > 0">{{
-                      store.formattedDuration
-                    }}</span>
+                    <span v-if="duration > 0">{{ formattedDuration }}</span>
                   </template>
                 </p>
               </div>
             </div>
 
             <div class="flex items-center space-x-3">
-              <Button variant="outline" size="sm" @click="store.reset()"
+              <Button variant="outline" size="sm" @click="reset()"
                 >Replace File</Button
               >
               <Button :disabled="!canProcess()" @click="processStemSeparation">

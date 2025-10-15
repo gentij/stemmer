@@ -1,16 +1,13 @@
 import { formatTime } from "@/lib/utils";
-import { splitStems } from "@/services/splitStems";
 import { defineStore } from "pinia";
 import type WaveSurfer from "wavesurfer.js";
+import { makeAudioBlobUrlFromPath } from "@/lib/audio/source-adapters";
+// ^ wraps your current convertToAudioProtocol + fetch/blob creation
 
-function convertToAudioProtocol(filePath: string): string {
-  return `audio://localhost${filePath}`;
-}
-
-export const useStemStore = defineStore("stem", {
+export const useAudioCoreStore = defineStore("audioCore", {
   state: () => ({
-    audioPath: null as string | null, // absolute path (Tauri)
-    audioFile: null as File | null, // browser File (if used)
+    audioPath: null as string | null,
+    audioFile: null as File | null,
     wavesurfer: null as WaveSurfer | null,
 
     isPlaying: false,
@@ -21,27 +18,24 @@ export const useStemStore = defineStore("stem", {
     currentTime: 0,
     volume: 0.7,
 
-    // internal: track the current object URL so we can revoke it
     _objectUrl: null as string | null,
-    // internal: if wavesurfer not set yet, remember what to load
     _pendingSrc: null as string | null,
   }),
 
   getters: {
-    progress: (state) => {
-      if (state.duration === 0) return 0;
-      return (state.currentTime / state.duration) * 100;
-    },
-    formattedCurrentTime: (state) => formatTime(state.currentTime),
-    formattedDuration: (state) => formatTime(state.duration),
+    progress: (s) =>
+      s.duration === 0 ? 0 : (s.currentTime / s.duration) * 100,
+    formattedCurrentTime: (s) => formatTime(s.currentTime),
+    formattedDuration: (s) => formatTime(s.duration),
+
+    // Optional aliases for future readability (keep current names too)
+    isWaveformReady: (s) => s.isReady,
+    isWaveformLoading: (s) => s.isLoading,
   },
 
   actions: {
     _loadIntoWaveSurfer(src: string) {
       if (!this.wavesurfer) {
-        console.log(
-          "Wavesurfer not ready, deferring load. Saving to _pendingSrc"
-        );
         this._pendingSrc = src;
         return;
       }
@@ -79,33 +73,20 @@ export const useStemStore = defineStore("stem", {
       this.audioFile = null;
 
       try {
-        const audioUrl = convertToAudioProtocol(path);
-        const response = await fetch(audioUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch audio: ${response.status}`);
-        }
-
-        // Convert to blob with explicit MIME type
-        const arrayBuffer = await response.arrayBuffer();
-        const contentType =
-          response.headers.get("content-type") || "audio/mpeg";
-        const blob = new Blob([arrayBuffer], { type: contentType });
-
-        const blobUrl = URL.createObjectURL(blob);
+        const blobUrl = await makeAudioBlobUrlFromPath(path);
         this._objectUrl = blobUrl;
 
         this._loadIntoWaveSurfer(blobUrl);
       } catch (error) {
         console.error("❌ Failed to load audio file:", error);
+
         this.isLoading = false;
         this.isReady = false;
       }
     },
 
     setWavesurfer(ws: WaveSurfer) {
-      if (this.wavesurfer) {
-        this.wavesurfer.destroy();
-      }
+      if (this.wavesurfer) this.wavesurfer.destroy();
 
       this.wavesurfer = ws;
       this.wavesurfer.setVolume(this.volume);
@@ -129,20 +110,22 @@ export const useStemStore = defineStore("stem", {
         this.duration = this.wavesurfer?.getDuration() || 0;
       });
 
-      this.wavesurfer.on("loading", (_progress: number) => {
+      this.wavesurfer.on("loading", () => {
         this.isLoading = true;
       });
 
-      this.wavesurfer.on("error", (error: any) => {
-        console.error("WaveSurfer error:", error);
+      this.wavesurfer.on("error", (e: any) => {
+        console.error("WaveSurfer error:", e);
         this.isLoading = false;
         this.isReady = false;
       });
 
       this.wavesurfer.on("play", () => (this.isPlaying = true));
+
       this.wavesurfer.on("pause", () => (this.isPlaying = false));
 
       this.wavesurfer.on("timeupdate", (t: number) => (this.currentTime = t));
+
       this.wavesurfer.on("seeking", (t: number) => (this.currentTime = t));
     },
 
@@ -160,8 +143,9 @@ export const useStemStore = defineStore("stem", {
 
     seek(time: number) {
       if (!this.wavesurfer || this.duration <= 0) return;
+
       const clamped = Math.max(0, Math.min(time, this.duration));
-      this.wavesurfer.seekTo(clamped / this.duration); // expects 0..1
+      this.wavesurfer.seekTo(clamped / this.duration);
     },
 
     setVolume(volume: number) {
@@ -169,30 +153,16 @@ export const useStemStore = defineStore("stem", {
       this.wavesurfer?.setVolume(this.volume);
     },
 
-    skipForward(seconds: number = 10) {
-      this.seek(this.currentTime + seconds);
+    skipForward(sec = 10) {
+      this.seek(this.currentTime + sec);
     },
 
-    skipBackward(seconds: number = 10) {
-      this.seek(this.currentTime - seconds);
+    skipBackward(sec = 10) {
+      this.seek(this.currentTime - sec);
     },
 
-    async splitStems() {
-      if (!this.audioPath) {
-        console.warn("No audioPath set; split requires a filesystem path.");
-        return;
-      }
-
-      try {
-        const result = await splitStems({
-          input: this.audioPath,
-          output: "output",
-        });
-        console.log("Done:", result);
-      } catch (err) {
-        console.error("Split failed:", err);
-      }
-    },
+    // NOTE: removed tool action from core; keep it in a tool store/service.
+    // (If you must keep it for now, keep it; you can deprecate later.)
 
     reset() {
       this.wavesurfer?.destroy();
@@ -204,14 +174,11 @@ export const useStemStore = defineStore("stem", {
       }
 
       this._pendingSrc = null;
-
       this.audioPath = null;
       this.audioFile = null;
-
       this.isPlaying = false;
       this.isLoading = false;
       this.isReady = false;
-
       this.duration = 0;
       this.currentTime = 0;
       this.volume = 0.7;

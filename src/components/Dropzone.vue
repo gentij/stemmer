@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { useStemStore } from "@/stores/stem";
+import { useAudioCoreStore } from "@/stores/audio-core.store";
 import { Button } from "@/components/ui/button";
 import { Upload, FileAudio, X } from "lucide-vue-next";
 
@@ -9,7 +9,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { listen, TauriEvent } from "@tauri-apps/api/event";
 import { basename } from "@tauri-apps/api/path";
 
-const store = useStemStore();
+const { loadFileFromPath, reset, audioPath } = useAudioCoreStore();
 
 const isDragging = ref(false);
 const displayName = ref<string | null>(null);
@@ -27,7 +27,7 @@ function isAudioPath(path: string) {
 async function handlePickedPath(path: string) {
   if (!isAudioPath(path)) return;
 
-  await store.loadFileFromPath(path);
+  await loadFileFromPath(path);
 
   try {
     displayName.value = await basename(path);
@@ -54,7 +54,7 @@ async function openFileDialog() {
 }
 
 function clearFile() {
-  store.reset();
+  reset();
   displayName.value = null;
 }
 
@@ -87,7 +87,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="w-full">
-    <div v-if="store.audioPath" class="space-y-4">
+    <div v-if="audioPath" class="space-y-4">
       <div
         class="flex items-center justify-between p-4 bg-card border border-border rounded-lg"
       >
@@ -95,10 +95,10 @@ onBeforeUnmount(() => {
           <FileAudio class="h-5 w-5 text-primary" />
           <div>
             <p class="font-medium">
-              {{ displayName || store.audioPath }}
+              {{ displayName || audioPath }}
             </p>
             <p class="text-xs text-muted-foreground break-all">
-              {{ store.audioPath }}
+              {{ audioPath }}
             </p>
           </div>
         </div>
