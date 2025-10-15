@@ -3,8 +3,9 @@ import { splitStems } from "@/services/splitStems";
 import { defineStore } from "pinia";
 import type WaveSurfer from "wavesurfer.js";
 
-// ✅ Tauri helper to turn an absolute FS path into a URL the WebView can load
-import { convertFileSrc } from "@tauri-apps/api/core";
+function convertToAudioProtocol(filePath: string): string {
+  return `audio://localhost${filePath}`;
+}
 
 export const useStemStore = defineStore("stem", {
   state: () => ({
@@ -36,10 +37,11 @@ export const useStemStore = defineStore("stem", {
   },
 
   actions: {
-    // ---- Source loading helpers -------------------------------------------
     _loadIntoWaveSurfer(src: string) {
-      // If wavesurfer isn't ready yet, defer load
       if (!this.wavesurfer) {
+        console.log(
+          "Wavesurfer not ready, deferring load. Saving to _pendingSrc"
+        );
         this._pendingSrc = src;
         return;
       }
@@ -52,16 +54,14 @@ export const useStemStore = defineStore("stem", {
       this.wavesurfer.load(src);
     },
 
-    // Load from a File (browser input). In Tauri you might still use this for previews.
     loadFile(file: File, path?: string) {
-      // Clean up old object URL if any
       if (this._objectUrl) {
         URL.revokeObjectURL(this._objectUrl);
         this._objectUrl = null;
       }
 
       this.audioFile = file;
-      this.audioPath = path || null; // optional hint if provided from Tauri
+      this.audioPath = path || null;
 
       const url = URL.createObjectURL(file);
       this._objectUrl = url;
@@ -69,9 +69,7 @@ export const useStemStore = defineStore("stem", {
       this._loadIntoWaveSurfer(url);
     },
 
-    // Load directly from an absolute filesystem path (Tauri best path)
-    loadFileFromPath(path: string) {
-      // Clean up any existing object URL
+    async loadFileFromPath(path: string) {
       if (this._objectUrl) {
         URL.revokeObjectURL(this._objectUrl);
         this._objectUrl = null;
@@ -80,12 +78,30 @@ export const useStemStore = defineStore("stem", {
       this.audioPath = path;
       this.audioFile = null;
 
-      // convert absolute path to a tauri://-style URL usable by the WebView
-      const src = convertFileSrc(path);
-      this._loadIntoWaveSurfer(src);
+      try {
+        const audioUrl = convertToAudioProtocol(path);
+        const response = await fetch(audioUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch audio: ${response.status}`);
+        }
+
+        // Convert to blob with explicit MIME type
+        const arrayBuffer = await response.arrayBuffer();
+        const contentType =
+          response.headers.get("content-type") || "audio/mpeg";
+        const blob = new Blob([arrayBuffer], { type: contentType });
+
+        const blobUrl = URL.createObjectURL(blob);
+        this._objectUrl = blobUrl;
+
+        this._loadIntoWaveSurfer(blobUrl);
+      } catch (error) {
+        console.error("❌ Failed to load audio file:", error);
+        this.isLoading = false;
+        this.isReady = false;
+      }
     },
 
-    // ---- Wavesurfer lifecycle ---------------------------------------------
     setWavesurfer(ws: WaveSurfer) {
       if (this.wavesurfer) {
         this.wavesurfer.destroy();
@@ -95,7 +111,6 @@ export const useStemStore = defineStore("stem", {
       this.wavesurfer.setVolume(this.volume);
       this.setupWaveSurferEvents();
 
-      // If we had a source queued before WS existed, load it now
       if (this._pendingSrc) {
         const src = this._pendingSrc;
         this._pendingSrc = null;
@@ -131,7 +146,6 @@ export const useStemStore = defineStore("stem", {
       this.wavesurfer.on("seeking", (t: number) => (this.currentTime = t));
     },
 
-    // ---- Transport ---------------------------------------------------------
     play() {
       this.wavesurfer?.play();
     },
@@ -163,7 +177,6 @@ export const useStemStore = defineStore("stem", {
       this.seek(this.currentTime - seconds);
     },
 
-    // ---- Split (fix typo) --------------------------------------------------
     async splitStems() {
       if (!this.audioPath) {
         console.warn("No audioPath set; split requires a filesystem path.");
@@ -175,13 +188,12 @@ export const useStemStore = defineStore("stem", {
           input: this.audioPath,
           output: "output",
         });
-        console.log("✅ Done:", result);
+        console.log("Done:", result);
       } catch (err) {
-        console.error("❌ Split failed:", err);
+        console.error("Split failed:", err);
       }
     },
 
-    // ---- Reset / cleanup ---------------------------------------------------
     reset() {
       this.wavesurfer?.destroy();
       this.wavesurfer = null;

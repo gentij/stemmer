@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import WaveSurfer from "wavesurfer.js";
 import { useStemStore } from "@/stores/stem";
 
 const store = useStemStore();
 const waveformContainer = ref<HTMLDivElement | null>(null);
+let cleanupClick: (() => void) | null = null;
 
 onMounted(() => {
   if (!waveformContainer.value) return;
+
+  const audioElement = document.createElement("audio");
+  audioElement.controls = false;
+  audioElement.preload = "auto";
+  audioElement.crossOrigin = "anonymous";
 
   const wavesurfer = WaveSurfer.create({
     container: waveformContainer.value,
@@ -19,14 +25,13 @@ onMounted(() => {
     height: 100,
     normalize: true,
     fillParent: true,
+    media: audioElement,
+    autoplay: false,
+    interact: true,
   });
 
-  // Hand WS to the store; the store will:
-  // - attach events
-  // - load whatever is currently selected (path or File) via its internal logic
   store.setWavesurfer(wavesurfer);
 
-  // Optional: click-to-seek on the waveform container
   const onClick = (e: MouseEvent) => {
     if (!store.wavesurfer || store.duration <= 0) return;
     const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
@@ -35,13 +40,13 @@ onMounted(() => {
   };
   waveformContainer.value.addEventListener("click", onClick);
 
-  // Cleanup
-  onUnmounted(() => {
+  cleanupClick = () => {
     waveformContainer.value?.removeEventListener("click", onClick);
-    // If you want to preserve audio state when navigating away,
-    // remove the next line. Otherwise this mirrors your previous behavior.
-    store.reset();
-  });
+  };
+});
+
+onBeforeUnmount(() => {
+  cleanupClick?.();
 });
 </script>
 
