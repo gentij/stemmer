@@ -1,15 +1,5 @@
 mod modules;
-use modules::stem_splitter;
-
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
-fn split_stems(input: &str, output: &str) -> Result<String, String> {
-    stem_splitter::split(input, output)
-}
+mod commands;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -90,7 +80,7 @@ pub fn run() {
                 }
             });
         })
-        .invoke_handler(tauri::generate_handler![greet, split_stems])
+        .invoke_handler(tauri::generate_handler![commands::split_stems])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
