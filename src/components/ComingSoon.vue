@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Clock, Lightbulb, Zap } from "lucide-vue-next";
 
-const props = defineProps<{
+defineProps<{
   toolName: string;
   toolDescription: string;
   icon?: any;

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { useAudioCoreStore } from "@/stores/audio-core.store";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +11,6 @@ import {
   RotateCcw,
 } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
-
-const showVolumeSlider = ref(false);
 
 const store = useAudioCoreStore();
 const { volume, isReady, isPlaying, formattedCurrentTime, formattedDuration } =

@@ -1,27 +1,39 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { useAudioCoreStore } from "@/stores/audio-core.store";
 import { useSplitterToolStore } from "@/stores/splitter-tool.store";
+import { useSettingsStore } from "@/stores/settings.store";
 import Dropzone from "@/components/Dropzone.vue";
 import WaveformViewer from "@/components/WaveformViewer.vue";
 import AudioPlayerControls from "@/components/AudioPlayerControls.vue";
+import ProgressModal from "@/components/ProgressModal.vue";
 import { Button } from "@/components/ui/button";
-import { Music, Waves, Scissors } from "lucide-vue-next";
+import { Music, Waves, Scissors, Settings as SettingsIcon } from "lucide-vue-next";
 
 import { basename } from "@tauri-apps/api/path";
 import { storeToRefs } from "pinia";
 
 const audioCoreStore = useAudioCoreStore();
 const splitterToolStore = useSplitterToolStore();
+const settingsStore = useSettingsStore();
 
 const { audioFile, audioPath, hasSource, duration, formattedDuration } =
   storeToRefs(audioCoreStore);
-const { canProcess } = storeToRefs(splitterToolStore);
+const { canProcess, isProcessing } = storeToRefs(splitterToolStore);
+const { hasValidOutputDirectory } = storeToRefs(settingsStore);
 
 const { reset } = audioCoreStore;
 const { split } = splitterToolStore;
 
 const displayName = ref<string>("");
+
+defineEmits<{
+  navigateToSettings: [];
+}>();
+
+onMounted(async () => {
+  await settingsStore.initialize();
+});
 
 async function refreshDisplayName() {
   if (audioFile.value) {
@@ -56,6 +68,9 @@ const processStemSeparation = () => {
 
 <template>
   <div class="h-full flex flex-col">
+    <!-- Progress Modal -->
+    <ProgressModal />
+
     <div class="border-b border-border bg-background/95 backdrop-blur p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
@@ -178,13 +193,45 @@ const processStemSeparation = () => {
             </div>
 
             <div class="flex items-center space-x-3">
-              <Button variant="outline" size="sm" @click="reset()"
-                >Replace File</Button
+              <Button 
+                variant="outline" 
+                size="sm" 
+                @click="reset()"
+                :disabled="isProcessing"
               >
-              <Button :disabled="!canProcess" @click="processStemSeparation">
+                Replace File
+              </Button>
+              <Button 
+                :disabled="!canProcess" 
+                @click="processStemSeparation"
+              >
                 <Scissors class="h-4 w-4 mr-2" />
                 Process Stems
               </Button>
+            </div>
+          </div>
+
+          <div 
+            v-if="hasSource && !hasValidOutputDirectory"
+            class="mt-4 p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg"
+          >
+            <div class="flex items-start space-x-3">
+              <SettingsIcon class="h-5 w-5 text-orange-500 mt-0.5" />
+              <div class="flex-1">
+                <h4 class="font-medium text-orange-500 mb-1">Output Directory Not Configured</h4>
+                <p class="text-sm text-muted-foreground mb-3">
+                  Please configure an output directory in settings before processing stems.
+                </p>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  @click="$emit('navigateToSettings')"
+                  class="text-orange-500 border-orange-500 hover:bg-orange-500/10"
+                >
+                  <SettingsIcon class="h-4 w-4 mr-2" />
+                  Go to Settings
+                </Button>
+              </div>
             </div>
           </div>
 

@@ -5,8 +5,21 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:path:default",
     "opener:default",
     "dialog:default",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "shell:allow-open",
+    "fs:allow-exists",
+    "fs:allow-create",
+    "fs:allow-mkdir",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-read-dir",
+    "fs:allow-read-file",
+    "fs:allow-document-write-recursive",
+    "fs:allow-desktop-write-recursive",
+    "fs:allow-download-write-recursive",
+    "fs:allow-home-write-recursive"
   ]
 }

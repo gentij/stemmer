@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
 import { Music } from "lucide-vue-next";
-import { TOOLS, type ToolId } from "@/constants/tools";
+import { TOOLS, SETTINGS_ITEM, type ToolId, type ViewId } from "@/constants/tools";
 import ThemeToggle from "@/components/ThemeToggle.vue";
 
 const tools = Object.entries(TOOLS).map(([id, tool]) => ({
@@ -9,17 +9,17 @@ const tools = Object.entries(TOOLS).map(([id, tool]) => ({
   ...tool,
 }));
 
-const props = defineProps<{
-  activeTool: string;
+defineProps<{
+  activeView: ViewId;
 }>();
 
 const emit = defineEmits<{
-  toolChange: [toolId: string];
+  viewChange: [viewId: ViewId];
 }>();
 
 const handleToolClick = (toolId: string, available: boolean) => {
   if (available) {
-    emit("toolChange", toolId);
+    emit("viewChange", toolId as ViewId);
   }
 };
 </script>
@@ -41,11 +41,11 @@ const handleToolClick = (toolId: string, available: boolean) => {
       </div>
     </div>
 
-    <div class="flex-1 p-4 space-y-2">
+    <div class="flex-1 p-4 space-y-2 overflow-y-auto">
       <div v-for="tool in tools" :key="tool.id">
         <Button variant="ghost" class="w-full justify-start p-4 h-auto" :class="{
           'bg-primary/10 text-primary':
-            activeTool === tool.id && tool.available,
+            activeView === tool.id && tool.available,
           'opacity-50 cursor-not-allowed': !tool.available,
         }" @click="handleToolClick(tool.id, tool.available)" :disabled="!tool.available">
           <div class="flex items-center space-x-3 w-full">
@@ -64,6 +64,24 @@ const handleToolClick = (toolId: string, available: boolean) => {
           </div>
         </Button>
       </div>
+    </div>
+
+    <div class="p-4 border-t border-border">
+      <Button variant="ghost" class="w-full justify-start p-4 h-auto" :class="{
+        'bg-primary/10 text-primary': activeView === 'settings',
+      }" @click="handleToolClick(SETTINGS_ITEM.id, SETTINGS_ITEM.available)">
+        <div class="flex items-center space-x-3 w-full">
+          <div class="p-2 rounded-lg bg-background">
+            <component :is="SETTINGS_ITEM.icon" class="h-5 w-5" />
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-medium">{{ SETTINGS_ITEM.name }}</div>
+            <div class="text-xs text-muted-foreground mt-1">
+              {{ SETTINGS_ITEM.description }}
+            </div>
+          </div>
+        </div>
+      </Button>
     </div>
   </div>
 </template>

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "wayland-dev": "env WAYLAND_DISPLAY= XDG_SESSION_TYPE=x11 WEBKIT_DISABLE_COMPOSITING_MODE=1 pnpm tauri dev",
+    "wayland:dev": "env WAYLAND_DISPLAY= XDG_SESSION_TYPE=x11 WEBKIT_DISABLE_COMPOSITING_MODE=1 pnpm tauri dev",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "tauri": "tauri"
@@ -13,6 +13,7 @@
   "dependencies": {
     "@tauri-apps/plugin-dialog": "^2.4.0",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-shell": "^2.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-vue-next": "^0.534.0",

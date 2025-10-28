@@ -9,6 +9,6 @@ const pinia = createPinia();
 app.use(pinia);
 
 import { useThemeStore } from "@/stores/theme";
-const themeStore = useThemeStore();
+useThemeStore();
 
 app.mount("#app");

@@ -1,4 +1,4 @@
-import { Volume2, Scissors, TrendingUp, Search } from "lucide-vue-next";
+import { Volume2, Scissors, TrendingUp, Search, Settings } from "lucide-vue-next";
 import type { Component } from "vue";
 
 export interface Tool {
@@ -9,6 +9,7 @@ export interface Tool {
 }
 
 export type ToolId = "remover" | "splitter" | "pitcher" | "key-bpm" | "cutter";
+export type ViewId = ToolId | "settings";
 
 export const TOOLS: Record<ToolId, Tool> = {
   remover: {
@@ -50,6 +51,14 @@ export const TOOL_DESCRIPTIONS: Record<ToolId, string> = {
   pitcher: "Change pitch and tempo without affecting quality",
   "key-bpm": "Automatically detect musical key and BPM",
   cutter: "Cut and trim your audio files with precision",
+};
+
+export const SETTINGS_ITEM = {
+  id: "settings" as const,
+  name: "Settings",
+  description: "Configure app preferences",
+  icon: Settings,
+  available: true,
 };
 
 export const DEFAULT_TOOL: ToolId = "splitter";

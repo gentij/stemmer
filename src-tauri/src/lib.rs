@@ -6,6 +6,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_fs::init())
         .register_asynchronous_uri_scheme_protocol("audio", |_app, request, responder| {
             // Custom audio:// protocol with CORS headers for WaveSurfer
             tauri::async_runtime::spawn(async move {
