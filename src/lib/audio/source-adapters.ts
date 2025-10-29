@@ -1,5 +1,7 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
+
 function convertToAudioProtocol(filePath: string): string {
-  return `audio://localhost${filePath}`;
+  return convertFileSrc(filePath);
 }
 
 export async function makeAudioBlobUrlFromPath(path: string): Promise<string> {
