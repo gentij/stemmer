@@ -3,13 +3,17 @@ import { computed } from "vue";
 import { useSplitterToolStore } from "@/stores/splitter-tool.store";
 import { Button } from "@/components/ui/button";
 import { 
-  Loader2, 
   Download, 
   Cpu, 
   FileEdit, 
   CheckCircle2, 
   XCircle,
-  FolderOpen
+  FolderOpen,
+  Check,
+  Database,
+  Settings,
+  FileAudio,
+  Scissors
 } from "lucide-vue-next";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { storeToRefs } from "pinia";
@@ -45,7 +49,9 @@ const statusConfig = computed(() => {
       return {
         icon: Cpu,
         title: "Processing Audio",
-        description: currentStage.value || "Analyzing and separating stems...",
+        description: currentStage.value 
+          ? getFriendlyStageMessage(currentStage.value)
+          : "Analyzing and separating stems...",
         color: "text-purple-500",
         showProgress: false,
         progress: 0,
@@ -90,6 +96,59 @@ const outputFolderName = computed(() => {
   return parts[parts.length - 1] || '';
 });
 
+const processingSteps = [
+  { 
+    id: 'resolve_model', 
+    label: 'Load Model',
+    description: 'Loading AI model',
+    icon: Database 
+  },
+  { 
+    id: 'engine_preload', 
+    label: 'Initialize Engine',
+    description: 'Preparing processor',
+    icon: Settings 
+  },
+  { 
+    id: 'read_audio', 
+    label: 'Read Audio',
+    description: 'Analyzing audio',
+    icon: FileAudio 
+  },
+  { 
+    id: 'infer', 
+    label: 'Separate Stems',
+    description: 'Splitting audio',
+    icon: Scissors 
+  },
+];
+
+const currentStepIndex = computed(() => {
+  if (!currentStage.value) return -1;
+  return processingSteps.findIndex(step => step.id === currentStage.value.toLowerCase());
+});
+
+const lineProgress = computed(() => {
+  if (currentStepIndex.value < 0) return 0;
+  
+  if (currentStepIndex.value >= processingSteps.length - 1) {
+    return ((processingSteps.length - 2) / (processingSteps.length - 1)) * 100;
+  }
+  
+  return (currentStepIndex.value / (processingSteps.length - 1)) * 100;
+});
+
+const getFriendlyStageMessage = (stage: string): string => {
+  const stageMap: Record<string, string> = {
+    'resolve_model': 'Loading AI separation model...',
+    'engine_preload': 'Initializing audio processing engine...',
+    'read_audio': 'Reading and analyzing audio file...',
+    'infer': 'Separating audio into individual stems...',
+  };
+  
+  return stageMap[stage.toLowerCase()] || stage;
+};
+
 const handleClose = () => {
   resetProgress();
 };
@@ -120,7 +179,7 @@ const formatBytes = (bytes: number): string => {
 
 <template>
   <div v-if="status !== 'idle'" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div class="bg-card border border-border rounded-lg shadow-2xl max-w-md w-full p-6 space-y-6">
+    <div class="bg-card border border-border rounded-lg shadow-2xl max-w-2xl w-full p-6 space-y-6">
       <div v-if="statusConfig" class="text-center space-y-4">
         <div class="flex justify-center">
           <div 
@@ -133,8 +192,7 @@ const formatBytes = (bytes: number): string => {
               :is="statusConfig.icon" 
               :class="[
                 'h-12 w-12',
-                statusConfig.color,
-                isProcessing ? 'animate-pulse' : ''
+                statusConfig.color              
               ]"
             />
           </div>
@@ -143,6 +201,49 @@ const formatBytes = (bytes: number): string => {
         <div>
           <h2 class="text-2xl font-bold mb-2">{{ statusConfig.title }}</h2>
           <p class="text-muted-foreground">{{ statusConfig.description }}</p>
+        </div>
+
+        <div v-if="status === 'processing'" class="py-4">
+          <div class="flex items-center justify-between relative">
+            <div class="absolute top-5 left-0 right-0 h-0.5 bg-muted mx-8">
+              <div 
+                class="h-full bg-primary transition-all duration-500"
+                :style="{ width: `${lineProgress}%` }"
+              />
+            </div>
+            
+            <div 
+              v-for="(step, index) in processingSteps"
+              :key="step.id"
+              class="flex flex-col items-center flex-1 relative z-10"
+            >
+              <div 
+                class="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-all duration-300"
+                :class="[
+                  index < currentStepIndex ? 'bg-primary text-primary-foreground' : 
+                  index === currentStepIndex ? 'bg-primary text-primary-foreground ring-4 ring-primary/20 animate-pulse' : 
+                  'bg-muted text-muted-foreground'
+                ]"
+              >
+                <component 
+                  v-if="index < currentStepIndex"
+                  :is="Check" 
+                  class="h-5 w-5" 
+                />
+                <component 
+                  v-else
+                  :is="step.icon" 
+                  class="h-5 w-5" 
+                />
+              </div>
+              <p 
+                class="text-xs font-medium text-center transition-colors"
+                :class="index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'"
+              >
+                {{ step.label }}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div v-if="statusConfig.showProgress" class="space-y-2">
@@ -158,10 +259,6 @@ const formatBytes = (bytes: number): string => {
               ({{ formatBytes(splitterStore.downloadedBytes) }} / {{ formatBytes(splitterStore.totalBytes) }})
             </span>
           </p>
-        </div>
-
-        <div v-if="status === 'processing'" class="flex justify-center">
-          <Loader2 class="h-8 w-8 animate-spin text-primary" />
         </div>
 
         <div class="flex gap-3 justify-center pt-4">
