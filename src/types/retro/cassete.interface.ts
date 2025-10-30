@@ -1,4 +1,6 @@
 export interface CassetteTheme {
+  id: string;
+  name: string;
   borderColor: string;
   textDark: string;
   housingColor: string;
