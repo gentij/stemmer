@@ -1,3 +1,3 @@
 <template>
-    <div>retro cassette</div>
+  <div>retro cassette</div>
 </template>
