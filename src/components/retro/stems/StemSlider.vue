@@ -11,7 +11,7 @@
     </div>
     <input
       :id="`${stem.id}-volume`"
-      v-model.number="stem.volume"
+      :value="stem.volume"
       type="range"
       min="0"
       max="100"
@@ -20,6 +20,7 @@
         '--slider-color': color,
         '--slider-progress': `${stem.volume}%`,
       }"
+      @input="handleVolumeChange"
     />
   </div>
 </template>
@@ -28,6 +29,15 @@
 import type { Stem } from "@/types/stems.interface";
 
 defineProps<{ stem: Stem; color: string }>();
+
+const emit = defineEmits<{
+  (e: "volume-change", volume: number): void;
+}>();
+
+function handleVolumeChange(event: Event) {
+  const target = event.target as HTMLInputElement;
+  emit("volume-change", Number(target.value));
+}
 </script>
 
 <style scoped>

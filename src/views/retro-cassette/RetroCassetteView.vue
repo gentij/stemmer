@@ -32,11 +32,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useAudioCoreStore } from "@/stores/audio-core.store";
 import { useSplitterToolStore } from "@/stores/splitter-tool.store";
 import { useSettingsStore } from "@/stores/settings.store";
+import { useStemsAudioStore } from "@/stores/stems-audio.store";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
 import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
@@ -55,6 +56,7 @@ const splitterStore = useSplitterToolStore();
 const { status, currentStage, downloadProgress, writingPercent } = storeToRefs(splitterStore);
 
 const settingsStore = useSettingsStore();
+const stemsAudioStore = useStemsAudioStore();
 
 const displayName = ref<string | null>(null);
 
@@ -69,6 +71,13 @@ const showUpload = computed(() => {
   return status.value === "idle" || status.value === "error";
 });
 const isProcessing = computed(() => splitterStore.isProcessing);
+
+watch(status, async (newStatus, oldStatus) => {
+  if (newStatus === "finished" && oldStatus !== "finished") {
+    console.log("🎵 Splitting complete, loading stems for playback...");
+    await stemsAudioStore.loadStems();
+  }
+});
 
 const processingMessage = computed(() => {
   switch (status.value) {

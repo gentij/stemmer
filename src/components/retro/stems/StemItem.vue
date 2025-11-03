@@ -6,12 +6,16 @@
       backgroundColor: 'rgba(13, 13, 13, 0.8)',
     }"
   >
-    <StemSlider :stem="stem" :color="stemColor" />
+    <StemSlider 
+      :stem="stem" 
+      :color="stemColor"
+      @volume-change="handleVolumeChange"
+    />
     <StemMuteButton
       :name="stem.name"
       :muted="stem.muted"
       :color="stemColor"
-      @toggle="stem.muted = !stem.muted"
+      @toggle="handleMuteToggle"
     />
   </div>
 </template>
@@ -21,6 +25,7 @@ import { computed } from "vue";
 import type { Stem } from "@/types/stems.interface";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import { defaultCassetteTheme } from "@/constants/retro/cassete";
+import { useStemsAudioStore } from "@/stores/stems-audio.store";
 import StemSlider from "./StemSlider.vue";
 import StemMuteButton from "./StemMuteButton.vue";
 
@@ -33,6 +38,8 @@ const props = withDefaults(defineProps<Props>(), {
   theme: () => defaultCassetteTheme,
 });
 
+const stemsAudioStore = useStemsAudioStore();
+
 const stemColor = computed(() => {
   const colorMap: Record<string, keyof CassetteTheme> = {
     vocals: "borderColor",
@@ -43,4 +50,12 @@ const stemColor = computed(() => {
   const colorKey = colorMap[props.stem.id] || "borderColor";
   return props.theme[colorKey] as string;
 });
+
+function handleVolumeChange(volume: number) {
+  stemsAudioStore.setStemVolume(props.stem.id, volume / 100);
+}
+
+function handleMuteToggle() {
+  stemsAudioStore.setStemMuted(props.stem.id, !props.stem.muted);
+}
 </script>

@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col items-center gap-8 md:gap-12 w-full max-w-md">
-    <!-- Cassette Body -->
     <CassetteBody
       :theme="props.theme"
       :is-playing="isPlaying"
@@ -14,9 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { storeToRefs } from "pinia";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import { defaultCassetteTheme } from "@/constants/retro/cassete";
+import { useStemsAudioStore } from "@/stores/stems-audio.store";
 import CassetteBody from "./CassetteBody.vue";
 
 interface Props {
@@ -29,17 +29,19 @@ const props = withDefaults(defineProps<Props>(), {
   trackName: "Serenity Vol.1",
 });
 
-const isPlaying = ref(false);
+const stemsAudioStore = useStemsAudioStore();
+const { isPlaying } = storeToRefs(stemsAudioStore);
+
 const uniqueId = Math.random().toString(36).slice(2);
 
 function togglePlay() {
-  isPlaying.value = !isPlaying.value;
+  stemsAudioStore.togglePlayPause();
 }
 function skipForward() {
-  console.log("Skip forward");
+  stemsAudioStore.skipForward(10);
 }
 function skipBackward() {
-  console.log("Skip backward");
+  stemsAudioStore.skipBackward(10);
 }
 </script>
 
