@@ -14,21 +14,34 @@
     >
       <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
 
-      <StemControl :theme="currentTheme" />
+      <ProcessingIndicator 
+        v-if="isProcessing" 
+        :theme="currentTheme" 
+        :message="processingMessage" 
+      />
 
-      <FileUpload :theme="currentTheme" @file-loaded="handleFileLoaded" />
+      <StemControl v-if="showStems" :theme="currentTheme" />
+
+      <FileUpload 
+        v-if="showUpload" 
+        :theme="currentTheme" 
+        @file-loaded="handleFileLoaded" 
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useAudioCoreStore } from "@/stores/audio-core.store";
+import { useSplitterToolStore } from "@/stores/splitter-tool.store";
+import { useSettingsStore } from "@/stores/settings.store";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
 import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
 import FileUpload from "@/components/retro/upload/FileUpload.vue";
+import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicator.vue";
 import { retroCassetteThemes, getThemeById } from "@/constants/retro/cassete";
 import { CassetteTheme } from "@/types/retro/cassete.interface";
 
@@ -38,6 +51,11 @@ const currentTheme = ref<CassetteTheme>(getThemeById(currentThemeId.value));
 const audioStore = useAudioCoreStore();
 const { audioPath } = storeToRefs(audioStore);
 
+const splitterStore = useSplitterToolStore();
+const { status, currentStage, downloadProgress, writingPercent } = storeToRefs(splitterStore);
+
+const settingsStore = useSettingsStore();
+
 const displayName = ref<string | null>(null);
 
 const currentTrack = computed(() => {
@@ -46,14 +64,47 @@ const currentTrack = computed(() => {
   return "No Track Loaded";
 });
 
+const showStems = computed(() => status.value === "finished");
+const showUpload = computed(() => {
+  return status.value === "idle" || status.value === "error";
+});
+const isProcessing = computed(() => splitterStore.isProcessing);
+
+const processingMessage = computed(() => {
+  switch (status.value) {
+    case "downloading":
+      return `Downloading model... ${downloadProgress.value}%`;
+    case "processing":
+      return currentStage.value || "Processing audio...";
+    case "writing":
+      return `Writing stems... ${writingPercent.value}%`;
+    default:
+      return "Processing...";
+  }
+});
+
 function selectTheme(themeId: string) {
   currentThemeId.value = themeId;
   currentTheme.value = getThemeById(themeId);
 }
 
-function handleFileLoaded(filename: string) {
+async function handleFileLoaded(filename: string) {
   displayName.value = filename;
+
+  if (audioStore.audioPath && settingsStore.hasValidOutputDirectory && splitterStore.status === "idle") {
+    console.log("✅ All requirements met, starting split...");
+    await splitterStore.split();
+  } else {
+    console.error("❌ Missing requirements for splitting:");
+    if (!audioStore.audioPath) console.error("  - No audio path");
+    if (!settingsStore.hasValidOutputDirectory) console.error("  - No output directory");
+    if (splitterStore.status !== "idle") console.error("  - Already processing");
+  }
 }
+
+onMounted(async () => {
+  await settingsStore.initialize();
+});
 </script>
 
 <style scoped></style>
