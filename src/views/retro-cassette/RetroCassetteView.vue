@@ -1,21 +1,22 @@
 <template>
-  <div class="min-h-screen bg-cassette-bg flex items-center justify-center p-4">
+  <div class="min-h-screen bg-cassette-bg flex items-center justify-center py-16 px-4 overflow-y-auto">
+
+    <div class="fixed bottom-8 right-8 z-50">
+      <ThemeKnob
+        :themes="retroCassetteThemes"
+        :current-theme-id="currentTheme.id"
+        @change="selectTheme"
+      />
+    </div>
+
     <div
-      class="w-full max-w-2xl mx-auto space-y-8 md:space-y-12 z-10 flex flex-col"
+      class="w-full max-w-2xl mx-auto space-y-8 md:space-y-12 z-10 flex flex-col items-center my-auto"
     >
       <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
 
-      <StemControl />
+      <StemControl :theme="currentTheme" />
 
-      <div class="flex flex-col items-center gap-4 px-4">
-        <ThemeKnob
-          :themes="retroCassetteThemes"
-          :current-theme-id="currentTheme.id"
-          @change="selectTheme"
-        />
-      </div>
-
-      <div class="mx-4">
+      <div class="w-full">
         <div
           class="border-2 border-dashed rounded-2xl p-8 text-center transition-all hover:border-cassette-pink-border cursor-pointer"
           :style="{ borderColor: currentTheme.borderColor + '40' }"

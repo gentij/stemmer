@@ -1,14 +1,11 @@
 <template>
-  <div class="flex flex-col items-center gap-8 md:gap-12 w-full max-w-md px-4">
-    <!-- Title -->
-    <!-- <CassetteTitle :theme="theme" /> -->
-
+  <div class="flex flex-col items-center gap-8 md:gap-12 w-full max-w-md">
     <!-- Cassette Body -->
     <CassetteBody
-      :theme="theme"
+      :theme="props.theme"
       :is-playing="isPlaying"
       :gradient-id="uniqueId"
-      :track-name="trackName"
+      :track-name="props.trackName"
       @toggle="togglePlay"
       @back="skipBackward"
       @forward="skipForward"
@@ -20,7 +17,6 @@
 import { ref } from "vue";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import { defaultCassetteTheme } from "@/constants/retro/cassete";
-// import CassetteTitle from "./CassetteTitle.vue";
 import CassetteBody from "./CassetteBody.vue";
 
 interface Props {
@@ -32,9 +28,6 @@ const props = withDefaults(defineProps<Props>(), {
   theme: () => defaultCassetteTheme,
   trackName: "Serenity Vol.1",
 });
-
-const theme = props.theme;
-const trackName = props.trackName;
 
 const isPlaying = ref(false);
 const uniqueId = Math.random().toString(36).slice(2);
@@ -51,7 +44,6 @@ function skipBackward() {
 </script>
 
 <style scoped>
-/* Keep svg layout stable in this scope as well */
 svg {
   display: block;
 }

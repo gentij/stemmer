@@ -17,7 +17,7 @@
       max="100"
       class="w-full h-2 rounded-full appearance-none cursor-pointer stem-slider"
       :style="{
-        '--slider-color': stem.color,
+        '--slider-color': color,
         '--slider-progress': `${stem.volume}%`,
       }"
     />
@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import type { Stem } from "@/types/stems.interface";
 
-defineProps<{ stem: Stem }>();
+defineProps<{ stem: Stem; color: string }>();
 </script>
 
 <style scoped>
