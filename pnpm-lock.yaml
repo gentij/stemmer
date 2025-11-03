@@ -44,6 +44,9 @@ importers:
       vue:
         specifier: ^3.5.13
         version: 3.5.18(typescript@5.6.3)
+      vue-router:
+        specifier: ^4.6.3
+        version: 4.6.3(vue@3.5.18(typescript@5.6.3))
       wavesurfer.js:
         specifier: ^7.8.7
         version: 7.10.1
@@ -1063,6 +1066,11 @@ packages:
       '@vue/composition-api':
         optional: true
 
+  vue-router@4.6.3:
+    resolution: {integrity: sha512-ARBedLm9YlbvQomnmq91Os7ck6efydTSpRP3nuOKCvgJOHNrhRoJDSKtee8kcL1Vf7nz6U+PMBL+hTvR3bTVQg==}
+    peerDependencies:
+      vue: ^3.5.0
+
   vue-tsc@2.2.12:
     resolution: {integrity: sha512-P7OP77b2h/Pmk+lZdJ0YWs+5tJ6J2+uOQPo7tlBnY44QqQSPYvS0qVT4wqDJgwrZaLe47etJLLQRFia71GYITw==}
     hasBin: true
@@ -1920,6 +1928,11 @@ snapshots:
 
   vue-demi@0.14.10(vue@3.5.18(typescript@5.6.3)):
     dependencies:
+      vue: 3.5.18(typescript@5.6.3)
+
+  vue-router@4.6.3(vue@3.5.18(typescript@5.6.3)):
+    dependencies:
+      '@vue/devtools-api': 6.6.4
       vue: 3.5.18(typescript@5.6.3)
 
   vue-tsc@2.2.12(typescript@5.6.3):
