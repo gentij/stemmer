@@ -16,48 +16,43 @@
 
       <StemControl :theme="currentTheme" />
 
-      <div class="w-full">
-        <div
-          class="border-2 border-dashed rounded-2xl p-8 text-center transition-all hover:border-cassette-pink-border cursor-pointer"
-          :style="{ borderColor: currentTheme.borderColor + '40' }"
-        >
-          <svg
-            class="w-12 h-12 mx-auto mb-4 opacity-50"
-            :style="{ color: currentTheme.borderColor }"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9 16V10H5L12 3L19 10H15V16H9ZM5 20V18H19V20H5Z"
-              :fill="currentTheme.borderColor"
-            />
-          </svg>
-          <p class="text-white/70 text-sm md:text-base mb-2">
-            Drop your audio file here
-          </p>
-          <p class="text-white/50 text-xs">MP3, WAV, FLAC supported</p>
-        </div>
-      </div>
+      <FileUpload :theme="currentTheme" @file-loaded="handleFileLoaded" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { storeToRefs } from "pinia";
+import { useAudioCoreStore } from "@/stores/audio-core.store";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
 import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
+import FileUpload from "@/components/retro/upload/FileUpload.vue";
 import { retroCassetteThemes, getThemeById } from "@/constants/retro/cassete";
 import { CassetteTheme } from "@/types/retro/cassete.interface";
 
 const currentThemeId = ref("purple-dream");
 const currentTheme = ref<CassetteTheme>(getThemeById(currentThemeId.value));
-const currentTrack = ref("Serenity Vol.1");
+
+const audioStore = useAudioCoreStore();
+const { audioPath } = storeToRefs(audioStore);
+
+const displayName = ref<string | null>(null);
+
+const currentTrack = computed(() => {
+  if (displayName.value) return displayName.value;
+  if (audioPath.value) return audioPath.value.split(/[\\/]/).pop() || "Unknown Track";
+  return "No Track Loaded";
+});
 
 function selectTheme(themeId: string) {
   currentThemeId.value = themeId;
   currentTheme.value = getThemeById(themeId);
+}
+
+function handleFileLoaded(filename: string) {
+  displayName.value = filename;
 }
 </script>
 
