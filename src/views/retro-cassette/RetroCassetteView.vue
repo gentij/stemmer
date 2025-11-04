@@ -74,7 +74,6 @@ const isProcessing = computed(() => splitterStore.isProcessing);
 
 watch(status, async (newStatus, oldStatus) => {
   if (newStatus === "finished" && oldStatus !== "finished") {
-    console.log("🎵 Splitting complete, loading stems for playback...");
     await stemsAudioStore.loadStems();
   }
 });
@@ -101,13 +100,7 @@ async function handleFileLoaded(filename: string) {
   displayName.value = filename;
 
   if (audioStore.audioPath && settingsStore.hasValidOutputDirectory && splitterStore.status === "idle") {
-    console.log("✅ All requirements met, starting split...");
     await splitterStore.split();
-  } else {
-    console.error("❌ Missing requirements for splitting:");
-    if (!audioStore.audioPath) console.error("  - No audio path");
-    if (!settingsStore.hasValidOutputDirectory) console.error("  - No output directory");
-    if (splitterStore.status !== "idle") console.error("  - Already processing");
   }
 }
 

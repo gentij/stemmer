@@ -35,27 +35,19 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       const splitterStore = useSplitterToolStore();
       const outputPath = splitterStore.outputPath;
 
-      if (!outputPath) {
-        console.error("No output path available");
-        return;
-      }
+      if (!outputPath) return;
 
       this.isLoading = true;
 
       try {
         const songName = await basename(outputPath);
-        console.log(`🎵 Loading stems from: ${outputPath} (song: ${songName})`);
 
         for (const stemId of Object.keys(this.stems) as Array<keyof typeof this.stems>) {
           const stemFileName = `${songName}_${stemId}.wav`;
           const stemPath = await join(outputPath, stemFileName);
 
-          console.log(`📂 Loading stem: ${stemId} from ${stemPath}`);
-
           try {
-            const encodedPath = encodeURIComponent(stemPath);
-            const audioUrl = `audio://localhost${encodedPath}`;
-            console.log(`🎵 Using audio protocol for ${stemId}: ${audioUrl}`);
+            const audioUrl = `audio://localhost${stemPath}`;
             
             const audio = new Audio();
             audio.src = audioUrl;
@@ -63,7 +55,6 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
             audio.muted = this.stems[stemId].muted;
 
             audio.addEventListener("loadedmetadata", () => {
-              console.log(`✅ Loaded stem: ${stemId}, duration: ${audio.duration}s`);
               if (this.duration === 0 || audio.duration > this.duration) {
                 this.duration = audio.duration;
               }
@@ -77,18 +68,13 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
               this.isPlaying = false;
             });
 
-            audio.addEventListener("error", (e) => {
-              console.error(`❌ Failed to load stem ${stemId}:`, e);
-            });
-
             this.stems[stemId].audio = audio;
           } catch (error) {
-            console.error(`❌ Failed to load stem ${stemId}:`, error);
+            console.error(`Failed to load stem ${stemId}:`, error);
           }
         }
 
         this.isLoading = false;
-        console.log("✅ All stems loaded");
       } catch (error) {
         console.error("Failed to load stems:", error);
         this.isLoading = false;
