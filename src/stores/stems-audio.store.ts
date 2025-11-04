@@ -46,6 +46,9 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
     isLoading: false,
     duration: 0,
     currentTime: 0,
+    audioContext: null as AudioContext | null,
+    startTime: 0, 
+    pauseTime: 0, 
   }),
 
   getters: {
@@ -62,6 +65,10 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       if (!outputPath) return;
 
       this.isLoading = true;
+
+      if (!this.audioContext) {
+        this.audioContext = new AudioContext();
+      }
 
       try {
         const songName = await basename(outputPath);
@@ -87,7 +94,9 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
             });
 
             audio.addEventListener("timeupdate", () => {
-              this.currentTime = audio.currentTime;
+              if (this.isPlaying) {
+                this.currentTime = audio.currentTime;
+              }
             });
 
             audio.addEventListener("ended", () => {
@@ -107,17 +116,41 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       }
     },
 
-    play() {
-      if (!this.allStemsLoaded) return;
+    async play() {
+      if (!this.allStemsLoaded || !this.audioContext) return;
 
-      Object.values(this.stems).forEach((stem) => {
-        stem.audio?.play();
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+
+      const targetTime = this.pauseTime;
+      
+      const audioElements = Object.values(this.stems)
+        .map(stem => stem.audio)
+        .filter(audio => audio !== null) as HTMLAudioElement[];
+
+      audioElements.forEach(audio => {
+        audio.currentTime = targetTime;
       });
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      const playPromises = audioElements.map(audio => 
+        audio.play().catch(e => console.error('Play failed:', e))
+      );
+
+      await Promise.all(playPromises);
+      
+      this.startTime = this.audioContext.currentTime - targetTime;
       this.isPlaying = true;
     },
 
     pause() {
       if (!this.allStemsLoaded) return;
+
+      if (this.isPlaying) {
+        this.pauseTime = this.currentTime;
+      }
 
       Object.values(this.stems).forEach((stem) => {
         stem.audio?.pause();
@@ -137,12 +170,24 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       if (!this.allStemsLoaded) return;
 
       const clampedTime = Math.max(0, Math.min(time, this.duration));
+      const wasPlaying = this.isPlaying;
+
+      if (wasPlaying) {
+        this.pause();
+      }
+      
+      this.pauseTime = clampedTime;
+      this.currentTime = clampedTime;
+
       Object.values(this.stems).forEach((stem) => {
         if (stem.audio) {
           stem.audio.currentTime = clampedTime;
         }
       });
-      this.currentTime = clampedTime;
+
+      if (wasPlaying) {
+        setTimeout(() => this.play(), 20);
+      }
     },
 
     skipForward(seconds = 10) {
