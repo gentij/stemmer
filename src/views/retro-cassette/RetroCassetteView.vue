@@ -1,5 +1,16 @@
 <template>
-  <div class="min-h-screen bg-cassette-bg flex items-center justify-center py-16 px-4 overflow-y-auto">
+  <div 
+    class="min-h-screen flex items-center justify-center py-16 px-4 overflow-y-auto retro-background"
+    :style="backgroundStyle"
+  >
+    
+    <div class="palm-left">
+      <Palm :theme="currentTheme" />
+    </div>
+
+    <div class="palm-right">
+      <Palm :theme="currentTheme" />
+    </div>
 
     <div class="fixed bottom-8 right-8 z-50">
       <ThemeKnob
@@ -10,7 +21,7 @@
     </div>
 
     <div
-      class="w-full max-w-2xl mx-auto space-y-8 md:space-y-12 z-10 flex flex-col items-center my-auto"
+      class="w-full max-w-2xl mx-auto space-y-8 md:space-y-12 relative z-10 flex flex-col items-center my-auto"
     >
       <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
 
@@ -32,81 +43,86 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
-import { storeToRefs } from "pinia";
-import { useAudioCoreStore } from "@/stores/audio-core.store";
-import { useSplitterToolStore } from "@/stores/splitter-tool.store";
-import { useSettingsStore } from "@/stores/settings.store";
-import { useStemsAudioStore } from "@/stores/stems-audio.store";
+import { onMounted } from "vue";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
 import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
 import FileUpload from "@/components/retro/upload/FileUpload.vue";
 import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicator.vue";
-import { retroCassetteThemes, getThemeById } from "@/constants/retro/cassete";
-import { CassetteTheme } from "@/types/retro/cassete.interface";
+import Palm from "@/components/retro/background/Palm.vue";
+import { useRetroCassetteTheme } from "@/composables/useRetroCassetteTheme";
+import { useAudioProcessing } from "@/composables/useAudioProcessing";
 
-const currentThemeId = ref("purple-dream");
-const currentTheme = ref<CassetteTheme>(getThemeById(currentThemeId.value));
+const { 
+  currentTheme, 
+  retroCassetteThemes, 
+  backgroundStyle, 
+  selectTheme 
+} = useRetroCassetteTheme();
 
-const audioStore = useAudioCoreStore();
-const { audioPath } = storeToRefs(audioStore);
-
-const splitterStore = useSplitterToolStore();
-const { status, currentStage, downloadProgress, writingPercent } = storeToRefs(splitterStore);
-
-const settingsStore = useSettingsStore();
-const stemsAudioStore = useStemsAudioStore();
-
-const displayName = ref<string | null>(null);
-
-const currentTrack = computed(() => {
-  if (displayName.value) return displayName.value;
-  if (audioPath.value) return audioPath.value.split(/[\\/]/).pop() || "Unknown Track";
-  return "No Track Loaded";
-});
-
-const showStems = computed(() => status.value === "finished");
-const showUpload = computed(() => {
-  return status.value === "idle" || status.value === "error";
-});
-const isProcessing = computed(() => splitterStore.isProcessing);
-
-watch(status, async (newStatus, oldStatus) => {
-  if (newStatus === "finished" && oldStatus !== "finished") {
-    await stemsAudioStore.loadStems();
-  }
-});
-
-const processingMessage = computed(() => {
-  switch (status.value) {
-    case "downloading":
-      return `Downloading model... ${downloadProgress.value}%`;
-    case "processing":
-      return currentStage.value || "Processing audio...";
-    case "writing":
-      return `Writing stems... ${writingPercent.value}%`;
-    default:
-      return "Processing...";
-  }
-});
-
-function selectTheme(themeId: string) {
-  currentThemeId.value = themeId;
-  currentTheme.value = getThemeById(themeId);
-}
-
-async function handleFileLoaded(filename: string) {
-  displayName.value = filename;
-
-  if (audioStore.audioPath && settingsStore.hasValidOutputDirectory && splitterStore.status === "idle") {
-    await splitterStore.split();
-  }
-}
+const {
+  currentTrack,
+  showStems,
+  showUpload,
+  isProcessing,
+  processingMessage,
+  handleFileLoaded,
+  initialize
+} = useAudioProcessing();
 
 onMounted(async () => {
-  await settingsStore.initialize();
+  await initialize();
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.retro-background {
+  position: relative;
+  transition: background 0.5s ease;
+}
+
+.palm-left,
+.palm-right {
+  position: fixed;
+  bottom: 0;
+  width: 600px;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 1;
+}
+
+.palm-left {
+  left: -100px;
+  transform: rotate(8deg);
+  transform-origin: bottom center;
+}
+
+.palm-right {
+  right: -100px;
+  transform: rotate(-8deg);
+  transform-origin: bottom center;
+}
+
+.palm-left svg,
+.palm-right svg {
+  width: 100%;
+  height: 100%;
+  transition: all 0.5s ease;
+}
+
+@media (max-width: 768px) {
+  .palm-left,
+  .palm-right {
+    width: 400px;
+  }
+  
+  .palm-left {
+    left: -120px;
+  }
+  
+  .palm-right {
+    right: -120px;
+  }
+}
+</style>
