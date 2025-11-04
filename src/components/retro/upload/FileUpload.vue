@@ -1,34 +1,42 @@
 <template>
   <div class="w-full">
     <div
-      class="border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer"
+      class="border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer shadow-sm"
       :class="{
         'border-opacity-100 bg-black/20': isDragging,
         'hover:border-opacity-60': !isDragging,
       }"
-      :style="{ 
-        borderColor: theme.borderColor + (isDragging ? '' : '40'),
+      :style="{
+        borderColor: theme.controlBorder + (isDragging ? '' : '40'),
       }"
       @click="openFileDialog"
     >
       <svg
         class="w-12 h-12 mx-auto mb-4 transition-opacity"
         :class="isDragging ? 'opacity-100' : 'opacity-50'"
-        :style="{ color: theme.borderColor }"
+        :style="{ color: theme.controlBorder }"
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
           d="M9 16V10H5L12 3L19 10H15V16H9ZM5 20V18H19V20H5Z"
-          :fill="theme.borderColor"
+          :fill="theme.controlBorder"
         />
       </svg>
       <p class="text-white/70 text-sm md:text-base mb-2">
-        {{ isDragging ? "Drop your audio file here" : "Click to upload or drag & drop" }}
+        {{
+          isDragging
+            ? "Drop your audio file here"
+            : "Click to upload or drag & drop"
+        }}
       </p>
       <p class="text-white/50 text-xs">
-        {{ isDragging ? "Release to upload" : "MP3, WAV, FLAC, OGG, AAC supported" }}
+        {{
+          isDragging
+            ? "Release to upload"
+            : "MP3, WAV, FLAC, OGG, AAC supported"
+        }}
       </p>
     </div>
   </div>
@@ -122,4 +130,3 @@ onBeforeUnmount(() => {
   unlistenDrop?.();
 });
 </script>
-

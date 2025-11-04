@@ -1,9 +1,12 @@
 <template>
-  <div 
+  <div
     class="min-h-screen flex items-center justify-center py-16 px-4 overflow-y-auto retro-background"
-    :style="backgroundStyle"
   >
-    
+    <SynthwaveBg
+      :theme="currentTheme"
+      class="pointer-events-none absolute inset-0 z-0 w-full h-full"
+    />
+
     <div class="palm-left">
       <Palm :theme="currentTheme" />
     </div>
@@ -25,18 +28,18 @@
     >
       <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
 
-      <ProcessingIndicator 
-        v-if="isProcessing" 
-        :theme="currentTheme" 
-        :message="processingMessage" 
+      <ProcessingIndicator
+        v-if="isProcessing"
+        :theme="currentTheme"
+        :message="processingMessage"
       />
 
       <StemControl v-if="showStems" :theme="currentTheme" />
 
-      <FileUpload 
-        v-if="showUpload" 
-        :theme="currentTheme" 
-        @file-loaded="handleFileLoaded" 
+      <FileUpload
+        v-if="showUpload"
+        :theme="currentTheme"
+        @file-loaded="handleFileLoaded"
       />
     </div>
   </div>
@@ -50,15 +53,12 @@ import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
 import FileUpload from "@/components/retro/upload/FileUpload.vue";
 import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicator.vue";
 import Palm from "@/components/retro/background/Palm.vue";
+import SynthwaveBg from "@/components/retro/background/Background.vue";
 import { useRetroCassetteTheme } from "@/composables/useRetroCassetteTheme";
 import { useAudioProcessing } from "@/composables/useAudioProcessing";
 
-const { 
-  currentTheme, 
-  retroCassetteThemes, 
-  backgroundStyle, 
-  selectTheme 
-} = useRetroCassetteTheme();
+const { currentTheme, retroCassetteThemes, selectTheme } =
+  useRetroCassetteTheme();
 
 const {
   currentTrack,
@@ -67,7 +67,7 @@ const {
   isProcessing,
   processingMessage,
   handleFileLoaded,
-  initialize
+  initialize,
 } = useAudioProcessing();
 
 onMounted(async () => {
@@ -78,7 +78,6 @@ onMounted(async () => {
 <style scoped>
 .retro-background {
   position: relative;
-  transition: background 0.5s ease;
 }
 
 .palm-left,
@@ -116,11 +115,11 @@ onMounted(async () => {
   .palm-right {
     width: 400px;
   }
-  
+
   .palm-left {
     left: -120px;
   }
-  
+
   .palm-right {
     right: -120px;
   }

@@ -13,10 +13,34 @@ interface StemAudio {
 export const useStemsAudioStore = defineStore("stemsAudio", {
   state: () => ({
     stems: {
-      vocals: { id: "vocals", name: "Vocals", audio: null, volume: 0.8, muted: false } as StemAudio,
-      drums: { id: "drums", name: "Drums", audio: null, volume: 0.7, muted: false } as StemAudio,
-      bass: { id: "bass", name: "Bass", audio: null, volume: 0.75, muted: false } as StemAudio,
-      other: { id: "other", name: "Other", audio: null, volume: 0.65, muted: false } as StemAudio,
+      vocals: {
+        id: "vocals",
+        name: "Vocals",
+        audio: null,
+        volume: 0.8,
+        muted: false,
+      } as StemAudio,
+      drums: {
+        id: "drums",
+        name: "Drums",
+        audio: null,
+        volume: 0.7,
+        muted: false,
+      } as StemAudio,
+      bass: {
+        id: "bass",
+        name: "Bass",
+        audio: null,
+        volume: 0.75,
+        muted: false,
+      } as StemAudio,
+      other: {
+        id: "other",
+        name: "Other",
+        audio: null,
+        volume: 0.65,
+        muted: false,
+      } as StemAudio,
     },
     isPlaying: false,
     isLoading: false,
@@ -42,13 +66,15 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       try {
         const songName = await basename(outputPath);
 
-        for (const stemId of Object.keys(this.stems) as Array<keyof typeof this.stems>) {
+        for (const stemId of Object.keys(this.stems) as Array<
+          keyof typeof this.stems
+        >) {
           const stemFileName = `${songName}_${stemId}.wav`;
           const stemPath = await join(outputPath, stemFileName);
 
           try {
             const audioUrl = `audio://localhost${stemPath}`;
-            
+
             const audio = new Audio();
             audio.src = audioUrl;
             audio.volume = this.stems[stemId].volume;
@@ -160,4 +186,3 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
     },
   },
 });
-
