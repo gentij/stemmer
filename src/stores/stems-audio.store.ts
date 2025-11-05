@@ -133,16 +133,42 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio.currentTime = targetTime;
       });
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await Promise.all(audioElements.map(audio => {
+        return new Promise<void>((resolve) => {
+          if (audio.readyState >= 3) {
+            resolve();
+            return;
+          }
+          
+          const onCanPlay = () => {
+            audio.removeEventListener('canplay', onCanPlay);
+            resolve();
+          };
+          audio.addEventListener('canplay', onCanPlay);
+          
+          setTimeout(() => {
+            audio.removeEventListener('canplay', onCanPlay);
+            resolve();
+          }, 1000);
+        });
+      }));
 
       const playPromises = audioElements.map(audio => 
-        audio.play().catch(e => console.error('Play failed:', e))
+        audio.play().catch(e => {
+          console.error('Play failed:', e);
+          throw e;
+        })
       );
 
-      await Promise.all(playPromises);
-      
-      this.startTime = this.audioContext.currentTime - targetTime;
-      this.isPlaying = true;
+      try {
+        await Promise.all(playPromises);
+        this.startTime = this.audioContext.currentTime - targetTime;
+        this.isPlaying = true;
+      } catch (error) {
+        console.error('Failed to start playback:', error);
+        this.isPlaying = false;
+        audioElements.forEach(audio => audio.pause());
+      }
     },
 
     pause() {
