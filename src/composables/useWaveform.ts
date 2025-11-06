@@ -3,6 +3,54 @@ import WaveSurfer from "wavesurfer.js";
 import type { WaveSurferOptions } from "wavesurfer.js";
 import { useStemsAudioStore } from "@/stores/stems-audio.store";
 import { storeToRefs } from "pinia";
+import { convertFileSrc } from "@tauri-apps/api/core";
+
+function resolveAudioSource(src: string): string {
+  console.log("[useWaveform] resolveAudioSource: incoming", src);
+  const lower = src.toLowerCase();
+
+  const isAlreadyResolved =
+    lower.startsWith("http://") ||
+    lower.startsWith("https://") ||
+    lower.startsWith("file:") ||
+    lower.startsWith("asset://") ||
+    lower.startsWith("tauri://") ||
+    lower.startsWith("data:");
+
+  if (isAlreadyResolved) {
+    console.log("[useWaveform] resolveAudioSource: already resolved", src);
+    return src;
+  }
+
+  if (lower.startsWith("audio://")) {
+    let path = src.replace(/^audio:\/\/localhost/i, "");
+    if (/^\/[a-z]:/i.test(path)) {
+      path = path.slice(1);
+    }
+    try {
+      path = decodeURIComponent(path);
+    } catch (error) {
+      console.warn(
+        "[useWaveform] resolveAudioSource: decodeURIComponent failed, using raw path",
+        error
+      );
+    }
+    const resolved = convertFileSrc(path);
+    console.log("[useWaveform] resolveAudioSource: converted legacy audio://", {
+      original: src,
+      normalizedPath: path,
+      resolved,
+    });
+    return resolved;
+  }
+
+  const resolved = convertFileSrc(src);
+  console.log("[useWaveform] resolveAudioSource: converted file path", {
+    original: src,
+    resolved,
+  });
+  return resolved;
+}
 
 export interface WaveformOptions {
   audioSrc: string;
@@ -18,7 +66,10 @@ export interface WaveformOptions {
   onError?: (error: unknown) => void;
 }
 
-export function useWaveform(containerRef: Ref<HTMLElement | null>, options: WaveformOptions) {
+export function useWaveform(
+  containerRef: Ref<HTMLElement | null>,
+  options: WaveformOptions
+) {
   const {
     audioSrc,
     colors = {},
@@ -52,22 +103,22 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
         fillParent: true,
         interact: true,
         hideScrollbar: true,
-        backend: 'WebAudio',
+        backend: "WebAudio",
         ...waveSurferOptions,
       });
 
-      await wavesurfer.value.load(audioSrc);
+      await wavesurfer.value.load(resolveAudioSource(audioSrc));
       isLoading.value = false;
       hasError.value = false;
       onLoad?.();
 
-      wavesurfer.value.on('click', handleClick);
+      wavesurfer.value.on("click", handleClick);
 
-      wavesurfer.value.on('ready', () => {
+      wavesurfer.value.on("ready", () => {
         wavesurfer.value?.pause();
       });
     } catch (error) {
-      console.error('Failed to load waveform:', error);
+      console.error("Failed to load waveform:", error);
       isLoading.value = false;
       hasError.value = true;
       onError?.(error);
@@ -78,7 +129,7 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
     const duration = stemsAudioStore.duration;
     if (duration > 0) {
       const seekTime = relativeX * duration;
-      
+
       if (onSeek) {
         onSeek(seekTime);
       } else {
@@ -102,9 +153,9 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
     }
   }
 
-  function setColors(newColors: WaveformOptions['colors']) {
+  function setColors(newColors: WaveformOptions["colors"]) {
     if (!wavesurfer.value) return;
-    
+
     if (newColors?.waveColor) {
       wavesurfer.value.setOptions({ waveColor: newColors.waveColor });
     }
@@ -120,7 +171,8 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
     if (wavesurfer.value && audioSrc) {
       isLoading.value = true;
       hasError.value = false;
-      wavesurfer.value.load(audioSrc)
+      wavesurfer.value
+        .load(resolveAudioSource(audioSrc))
         .then(() => {
           isLoading.value = false;
           onLoad?.();
@@ -153,4 +205,3 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
     reload,
   };
 }
-

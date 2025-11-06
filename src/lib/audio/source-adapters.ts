@@ -1,11 +1,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-function convertToAudioProtocol(filePath: string): string {
-  return convertFileSrc(filePath);
-}
-
 export async function makeAudioBlobUrlFromPath(path: string): Promise<string> {
-  const audioUrl = convertToAudioProtocol(path);
+  const audioUrl = convertFileSrc(path);
   const res = await fetch(audioUrl);
 
   if (!res.ok) throw new Error(`Failed to fetch audio: ${res.status}`);
