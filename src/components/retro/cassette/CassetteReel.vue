@@ -12,7 +12,17 @@
         :fill="theme.reelOuter"
         :stroke="theme.reelStroke"
       />
-      <g class="reel-rotor" :class="{ 'animate-spin-slow': isPlaying }">
+      <Motion
+        as="g"
+        class="reel-rotor"
+        :animate="{ rotate: isPlaying ? [0, 360] : 0 }"
+        :transition="{
+          duration: isPlaying ? 3 : 0.3,
+          repeat: isPlaying ? Infinity : 0,
+          ease: isPlaying ? 'linear' : 'easeOut',
+          repeatType: 'loop'
+        }"
+      >
         <ellipse
           cx="16"
           cy="15.9375"
@@ -69,34 +79,25 @@
           transform="matrix(0.00461716 0.999989 0.999989 -0.00461716 4 14.4431)"
           :fill="theme.reelCenter"
         />
-      </g>
+      </Motion>
     </svg>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Motion } from "motion-v";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
+
+const Infinity = Number.POSITIVE_INFINITY;
 
 defineProps<{ theme: CassetteTheme; isPlaying: boolean }>();
 </script>
 
 <style scoped>
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-}
 svg {
   display: block;
 }
+
 .reel-rotor {
   transform-box: fill-box;
   transform-origin: 50% 50%;

@@ -256,5 +256,6 @@ svg {
   display: block;
   filter: blur(1.5px);
   transition: ease-in 0.3s;
+  position: fixed;
 }
 </style>

@@ -7,13 +7,13 @@
       class="pointer-events-none absolute inset-0 z-0 w-full h-full"
     />
 
-    <div class="palm-left">
+    <!-- <div class="palm-left">
       <Palm :theme="currentTheme" />
     </div>
 
     <div class="palm-right">
       <Palm :theme="currentTheme" />
-    </div>
+    </div> -->
 
     <div class="fixed bottom-8 right-8 z-50">
       <ThemeKnob
@@ -52,7 +52,7 @@ import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
 import FileUpload from "@/components/retro/upload/FileUpload.vue";
 import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicator.vue";
-import Palm from "@/components/retro/background/Palm.vue";
+// import Palm from "@/components/retro/background/Palm.vue";
 import SynthwaveBg from "@/components/retro/background/Background.vue";
 import { useRetroCassetteTheme } from "@/composables/useRetroCassetteTheme";
 import { useAudioProcessing } from "@/composables/useAudioProcessing";
@@ -76,11 +76,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.retro-background {
+/* .retro-background {
   position: relative;
-}
+} */
 
-.palm-left,
+/* .palm-left,
 .palm-right {
   position: fixed;
   bottom: 0;
@@ -123,5 +123,5 @@ onMounted(async () => {
   .palm-right {
     right: -120px;
   }
-}
+} */
 </style>

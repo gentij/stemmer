@@ -1,10 +1,11 @@
 <template>
   <div class="w-full max-w-md space-y-4">
     <StemItem
-      v-for="stem in stems"
+      v-for="(stem, index) in stems"
       :key="stem.id"
       :stem="stem"
       :theme="props.theme"
+      :stem-index="index"
     />
   </div>
 </template>
