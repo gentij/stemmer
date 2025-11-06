@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center gap-8 md:gap-12 w-full max-w-md">
+  <div class="flex flex-col items-center gap-8 md:gap-12 w-full">
     <CassetteBody
       :theme="props.theme"
       :is-playing="isPlaying"

@@ -1,8 +1,8 @@
 <template>
-  <div class="flex-1 flex items-center justify-center gap-2 md:gap-3">
+  <div class="flex-1 flex items-center justify-center gap-3 md:gap-4">
     <button
       @click="$emit('back')"
-      class="w-5 h-5 md:w-6 md:h-6 opacity-20 hover:opacity-100 transition-opacity"
+      class="w-7 h-7 md:w-9 md:h-9 opacity-20 hover:opacity-100 transition-opacity"
       aria-label="Skip backward"
     >
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -24,7 +24,7 @@
 
     <button
       @click="$emit('toggle')"
-      class="w-5 h-5 md:w-6 md:h-6 hover:scale-110 transition-transform"
+      class="w-8 h-8 md:w-10 md:h-10 hover:scale-110 transition-transform"
       :aria-label="isPlaying ? 'Pause' : 'Play'"
     >
       <svg
@@ -50,7 +50,7 @@
 
     <button
       @click="$emit('forward')"
-      class="w-5 h-5 md:w-6 md:h-6 opacity-20 hover:opacity-100 transition-opacity"
+      class="w-7 h-7 md:w-9 md:h-9 opacity-20 hover:opacity-100 transition-opacity"
       aria-label="Skip forward"
     >
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

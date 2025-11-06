@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-md space-y-4">
+  <div class="w-full space-y-4">
     <StemItem
       v-for="(stem, index) in stems"
       :key="stem.id"
