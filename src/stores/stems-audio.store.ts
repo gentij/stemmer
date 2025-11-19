@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { useSplitterToolStore } from "./splitter-tool.store";
 import { join, basename } from "@tauri-apps/api/path";
+import { readFile } from "@tauri-apps/plugin-fs";
 
 interface StemAudio {
   id: string;
@@ -80,7 +81,11 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
           const stemPath = await join(outputPath, stemFileName);
 
           try {
-            const audioUrl = `audio://localhost${stemPath}`;
+            const fileData = await readFile(stemPath); 
+
+            const blob = new Blob([fileData], { type: "audio/wav" });
+        const audioUrl = URL.createObjectURL(blob);
+
 
             const audio = new Audio();
             audio.src = audioUrl;
@@ -156,7 +161,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       const playPromises = audioElements.map(audio => 
         audio.play().catch(e => {
           console.error('Play failed:', e);
-          throw e;
+          // throw e;
         })
       );
 
