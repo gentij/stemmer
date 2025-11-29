@@ -1,7 +1,7 @@
 <template>
   <button
     @click="navigateToSettings"
-    class="fixed top-4 right-4 z-50 p-3 rounded-full backdrop-blur-md transition-all hover:scale-110 active:scale-95"
+    class="fixed top-8 right-8 z-50 p-3 rounded-full backdrop-blur-md transition-all hover:scale-110 active:scale-95 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/10"
     :class="isSettings ? 'bg-white/10 hover:bg-white/20' : 'bg-black/20 hover:bg-black/30'"
     :aria-label="isSettings ? 'Back to cassette' : 'Open settings'"
   >

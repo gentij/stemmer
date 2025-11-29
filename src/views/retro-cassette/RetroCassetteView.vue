@@ -17,7 +17,7 @@
       </div>
     </div>
 
-    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50">
+    <div class="fixed top-8 left-1/2 -translate-x-1/2 z-50">
       <div class="backdrop-blur-md bg-black/20 rounded-2xl p-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/10">
         <AppLogo :theme="currentTheme" />
       </div>

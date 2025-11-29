@@ -39,7 +39,7 @@
         >
           <div class="flex items-center justify-between gap-4 mb-4">
             <div class="flex items-center gap-3">
-              <div class="w-12 h-12 md:w-16 md:h-16 flex-shrink-0">
+              <div class="w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
                 <CassetteReel :theme="theme" :is-playing="true" />
               </div>
               <div>
