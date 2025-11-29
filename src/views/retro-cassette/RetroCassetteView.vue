@@ -7,7 +7,7 @@
       class="pointer-events-none absolute inset-0 z-0 w-full h-full"
     />
 
-    <div class="fixed bottom-8 right-8 z-50">
+    <div class="fixed top-8 left-8 z-50">
       <ThemeKnob
         :themes="retroCassetteThemes"
         :current-theme-id="currentTheme.id"
@@ -16,7 +16,7 @@
     </div>
 
     <div
-      class="w-full max-w-4xl mx-auto space-y-8 md:space-y-12 relative z-10 flex flex-col items-center my-auto px-4"
+      class="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 relative z-10 flex flex-col items-center my-auto px-4"
     >
       <div class="w-full max-w-3xl">
         <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
@@ -32,9 +32,12 @@
         :current-stem="currentStem"
       />
 
-      <div v-if="showStems" class="w-full max-w-3xl space-y-6">
+      <div v-if="showStems" class="w-full space-y-6">
         <StemControl :theme="currentTheme" />
-        <ProcessingActions :theme="currentTheme" :output-path="outputPath" />
+        
+        <div class="flex justify-center">
+          <ProcessingActions :theme="currentTheme" :output-path="outputPath" />
+        </div>
       </div>
 
       <div v-if="showUpload" class="w-full max-w-3xl">

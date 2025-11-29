@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-3xl">
+  <div class="w-full max-w-2xl">
     <div
       class="border-2 rounded-3xl p-6 md:p-8 shadow-[-4px_8px_16px_0_rgba(255,255,255,0.16)] relative overflow-hidden"
       :style="{ 
