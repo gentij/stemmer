@@ -10,7 +10,7 @@ export function useAudioProcessing() {
   const { audioPath } = storeToRefs(audioStore);
 
   const splitterStore = useSplitterToolStore();
-  const { status, currentStage, downloadProgress, writingPercent, currentStem } = storeToRefs(splitterStore);
+  const { status, currentStage, downloadProgress, writingPercent, currentStem, outputPath } = storeToRefs(splitterStore);
 
   const settingsStore = useSettingsStore();
   const stemsAudioStore = useStemsAudioStore();
@@ -81,6 +81,7 @@ export function useAudioProcessing() {
     progress,
     currentStage,
     currentStem,
+    outputPath,
     handleFileLoaded,
     initialize
   };

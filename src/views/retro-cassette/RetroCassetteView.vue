@@ -32,8 +32,9 @@
         :current-stem="currentStem"
       />
 
-      <div v-if="showStems" class="w-full max-w-3xl">
+      <div v-if="showStems" class="w-full max-w-3xl space-y-6">
         <StemControl :theme="currentTheme" />
+        <ProcessingActions :theme="currentTheme" :output-path="outputPath" />
       </div>
 
       <div v-if="showUpload" class="w-full max-w-3xl">
@@ -53,6 +54,7 @@ import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
 import FileUpload from "@/components/retro/upload/FileUpload.vue";
 import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicator.vue";
+import ProcessingActions from "@/components/retro/actions/ProcessingActions.vue";
 import SynthwaveBg from "@/components/retro/background/Background.vue";
 import { useRetroCassetteTheme } from "@/composables/useRetroCassetteTheme";
 import { useAudioProcessing } from "@/composables/useAudioProcessing";
@@ -70,6 +72,7 @@ const {
   progress,
   currentStage,
   currentStem,
+  outputPath,
   handleFileLoaded,
   initialize,
 } = useAudioProcessing();
