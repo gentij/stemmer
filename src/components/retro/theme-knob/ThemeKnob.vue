@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col items-center">
+  <div class="flex flex-col items-center w-[100px]">
     <div
       ref="knob"
-      class="relative w-36 h-36 md:w-44 md:h-44 rounded-full flex items-center justify-center cursor-grab select-none outline-none"
+      class="relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center cursor-grab select-none outline-none mx-auto"
       :style="{ transform: `rotate(${angle}deg)` }"
       @pointerdown="onPointerDown"
       @keydown="onKeyDown"
@@ -20,13 +20,27 @@
           :style="innerStyle"
         >
           <div
-            class="w-1 h-6 bg-white rounded-sm transform translate-y-[-40%]"
+            class="w-0.5 h-4 bg-white rounded-sm transform translate-y-[-40%]"
             :style="markerStyle"
           ></div>
         </div>
       </div>
     </div>
-    <div class="mt-3 text-white font-medium text-sm">{{ currentThemeName }}</div>
+    
+    <div
+      class="mt-2 px-3 py-1 border rounded-md w-full flex items-center justify-center"
+      :style="{
+        borderColor: currentTheme?.infoBorder || '#251248',
+        backgroundColor: currentTheme?.infoBg || '#0D0D0D',
+      }"
+    >
+      <span
+        class="text-xs font-mono font-medium text-center whitespace-nowrap"
+        :style="{ color: currentTheme?.tapeAccent || '#F6C2FF' }"
+      >
+        {{ currentThemeName }}
+      </span>
+    </div>
   </div>
 </template>
 
@@ -70,6 +84,10 @@ const displayIndex = computed(() =>
 const currentThemeName = computed(() => {
   const t = props.themes[displayIndex.value];
   return t ? t.name : "";
+});
+
+const currentTheme = computed(() => {
+  return props.themes[displayIndex.value];
 });
 
 watch(

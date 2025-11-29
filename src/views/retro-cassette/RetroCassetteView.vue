@@ -8,15 +8,23 @@
     />
 
     <div class="fixed top-8 left-8 z-50">
-      <ThemeKnob
-        :themes="retroCassetteThemes"
-        :current-theme-id="currentTheme.id"
-        @change="selectTheme"
-      />
+      <div class="backdrop-blur-md bg-black/20 rounded-2xl p-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/10">
+        <ThemeKnob
+          :themes="retroCassetteThemes"
+          :current-theme-id="currentTheme.id"
+          @change="selectTheme"
+        />
+      </div>
+    </div>
+
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50">
+      <div class="backdrop-blur-md bg-black/20 rounded-2xl p-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] border border-white/10">
+        <AppLogo :theme="currentTheme" />
+      </div>
     </div>
 
     <div
-      class="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 relative z-10 flex flex-col items-center my-auto px-4"
+      class="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 relative z-10 flex flex-col items-center my-auto px-4 pt-24"
     >
       <div class="w-full max-w-3xl">
         <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
@@ -55,6 +63,7 @@ import { onMounted } from "vue";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
 import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
+import AppLogo from "@/components/retro/logo/AppLogo.vue";
 import FileUpload from "@/components/retro/upload/FileUpload.vue";
 import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicator.vue";
 import ProcessingActions from "@/components/retro/actions/ProcessingActions.vue";
