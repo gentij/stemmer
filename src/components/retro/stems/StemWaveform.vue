@@ -73,12 +73,15 @@ const { isLoading } = useWaveform(waveformRef, {
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
+  transform: translateZ(0);
+  will-change: contents;
 }
 
 .waveform-wrapper {
   width: 100%;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
+  contain: layout style paint;
 }
 
 .loading-overlay {

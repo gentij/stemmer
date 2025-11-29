@@ -1,4 +1,4 @@
-import { ref, onMounted, onBeforeUnmount, watch, type Ref } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, type Ref } from "vue";
 import WaveSurfer from "wavesurfer.js";
 import type { WaveSurferOptions } from "wavesurfer.js";
 import { useStemsAudioStore } from "@/stores/stems-audio.store";
@@ -34,25 +34,35 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
   const hasError = ref(false);
 
   const stemsAudioStore = useStemsAudioStore();
-  const { currentTime } = storeToRefs(stemsAudioStore);
+  const { currentTime, isPlaying } = storeToRefs(stemsAudioStore);
+  
+  let animationFrameId: number | null = null;
+  let lastSyncedTime = -1;
 
   async function initialize() {
     if (!containerRef.value) return;
 
     try {
+      const mediaElement = document.createElement('audio');
+      mediaElement.preload = 'metadata';
+      
       wavesurfer.value = WaveSurfer.create({
         container: containerRef.value,
         waveColor: colors.waveColor || "#4f46e540",
         progressColor: colors.progressColor || "#4f46e5",
         cursorColor: colors.cursorColor || "#ec4899",
-        barWidth: 2,
-        barGap: 1,
+        barWidth: 3,
+        barGap: 2,
+        barRadius: 2,
         height,
         normalize: true,
         fillParent: true,
         interact: true,
         hideScrollbar: true,
-        backend: 'WebAudio',
+        media: mediaElement,
+        minPxPerSec: 1,
+        autoScroll: false,
+        autoCenter: false,
         ...waveSurferOptions,
       });
 
@@ -87,14 +97,54 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
     }
   }
 
-  watch(currentTime, (newTime) => {
-    if (wavesurfer.value && !isLoading.value) {
-      const duration = wavesurfer.value.getDuration();
-      if (duration > 0) {
-        wavesurfer.value.setTime(newTime);
+  function startProgressAnimation() {
+    if (animationFrameId !== null) return;
+    
+    function updateProgress() {
+      if (!stemsAudioStore.isPlaying) {
+        animationFrameId = null;
+        return;
+      }
+      
+      if (wavesurfer.value && !isLoading.value) {
+        const duration = wavesurfer.value.getDuration();
+        if (duration > 0) {
+          const time = stemsAudioStore.currentTime;
+          if (Math.abs(time - lastSyncedTime) > 0.03) {
+            wavesurfer.value.setTime(time);
+            lastSyncedTime = time;
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(updateProgress);
+    }
+    
+    animationFrameId = requestAnimationFrame(updateProgress);
+  }
+
+  function stopProgressAnimation() {
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  }
+
+  watch(
+    [currentTime, isPlaying],
+    ([newTime, playing], [, wasPlaying]) => {
+      if (playing && !wasPlaying) {
+        startProgressAnimation();
+      } else if (!playing && wavesurfer.value && !isLoading.value) {
+        if (Math.abs(newTime - lastSyncedTime) > 0.05) {
+          const duration = wavesurfer.value.getDuration();
+          if (duration > 0) {
+            wavesurfer.value.setTime(newTime);
+            lastSyncedTime = newTime;
+          }
+        }
       }
     }
-  });
+  );
 
   function seekTo(time: number) {
     if (wavesurfer.value) {
@@ -138,6 +188,7 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
   });
 
   onBeforeUnmount(() => {
+    stopProgressAnimation();
     if (wavesurfer.value) {
       wavesurfer.value.destroy();
       wavesurfer.value = null;

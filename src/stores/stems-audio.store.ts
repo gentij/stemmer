@@ -98,15 +98,18 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
               }
             });
 
-            audio.addEventListener("timeupdate", () => {
-              if (this.isPlaying) {
-                this.currentTime = audio.currentTime;
-              }
-            });
+            // Only use the first stem (vocals) as the time source to avoid 4x updates
+            if (stemId === "vocals") {
+              audio.addEventListener("timeupdate", () => {
+                if (this.isPlaying) {
+                  this.currentTime = audio.currentTime;
+                }
+              });
 
-            audio.addEventListener("ended", () => {
-              this.isPlaying = false;
-            });
+              audio.addEventListener("ended", () => {
+                this.isPlaying = false;
+              });
+            }
 
             this.stems[stemId].audio = audio;
           } catch (error) {
