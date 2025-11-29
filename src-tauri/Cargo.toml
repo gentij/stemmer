@@ -28,5 +28,5 @@ tauri-plugin-dialog = "^2"
 http = "1"
 tokio = { version = "1", features = ["fs"] }
 urlencoding = "2"
-stem-splitter-core = "1.0.0"
+stem-splitter-core = "1.1.0"
 

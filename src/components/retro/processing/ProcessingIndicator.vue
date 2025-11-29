@@ -39,8 +39,8 @@
         >
           <div class="flex items-center justify-between gap-4 mb-4">
             <div class="flex items-center gap-3">
-              <div class="w-16 h-16 md:w-20 md:h-20 flex-shrink-0">
-                <CassetteReel :theme="theme" :is-playing="true" />
+              <div class="w-16 h-16 flex-shrink-0">
+                <CassetteReel class="w-full h-full" :theme="theme" :is-playing="true" />
               </div>
               <div>
                 <h3 class="text-white font-bold text-sm md:text-base uppercase tracking-wider">
