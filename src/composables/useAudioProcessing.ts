@@ -10,7 +10,7 @@ export function useAudioProcessing() {
   const { audioPath } = storeToRefs(audioStore);
 
   const splitterStore = useSplitterToolStore();
-  const { status, currentStage, downloadProgress, writingPercent } = storeToRefs(splitterStore);
+  const { status, currentStage, downloadProgress, writingPercent, currentStem } = storeToRefs(splitterStore);
 
   const settingsStore = useSettingsStore();
   const stemsAudioStore = useStemsAudioStore();
@@ -40,6 +40,19 @@ export function useAudioProcessing() {
     }
   });
 
+  const progress = computed(() => {
+    switch (status.value) {
+      case "downloading":
+        return downloadProgress.value;
+      case "processing":
+        return 50; // Show halfway to indicate active processing
+      case "writing":
+        return writingPercent.value;
+      default:
+        return 0;
+    }
+  });
+
   watch(status, async (newStatus, oldStatus) => {
     if (newStatus === "finished" && oldStatus !== "finished") {
       await stemsAudioStore.loadStems();
@@ -64,6 +77,10 @@ export function useAudioProcessing() {
     showUpload,
     isProcessing,
     processingMessage,
+    status,
+    progress,
+    currentStage,
+    currentStem,
     handleFileLoaded,
     initialize
   };

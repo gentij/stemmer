@@ -25,7 +25,11 @@
       <ProcessingIndicator
         v-if="isProcessing"
         :theme="currentTheme"
+        :status="status"
         :message="processingMessage"
+        :progress="progress"
+        :current-stage="currentStage"
+        :current-stem="currentStem"
       />
 
       <div v-if="showStems" class="w-full max-w-3xl">
@@ -62,6 +66,10 @@ const {
   showUpload,
   isProcessing,
   processingMessage,
+  status,
+  progress,
+  currentStage,
+  currentStem,
   handleFileLoaded,
   initialize,
 } = useAudioProcessing();
