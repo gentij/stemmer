@@ -76,7 +76,10 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
       wavesurfer.value.on('ready', () => {
         wavesurfer.value?.pause();
       });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        return;
+      }
       console.error('Failed to load waveform:', error);
       isLoading.value = false;
       hasError.value = true;
@@ -175,7 +178,10 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
           isLoading.value = false;
           onLoad?.();
         })
-        .catch((error) => {
+        .catch((error: any) => {
+          if (error?.name === 'AbortError') {
+            return;
+          }
           isLoading.value = false;
           hasError.value = true;
           onError?.(error);

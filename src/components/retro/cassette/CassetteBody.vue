@@ -108,12 +108,12 @@ const wobbleAnimation = ref<{ x: number | number[]; y: number | number[] }>({ x:
 watch(() => props.isPlaying, (newVal, oldVal) => {
   if (newVal && !oldVal) {
     wobbleAnimation.value = {
-      x: [0, -1, 1, -1, 1, 0],
-      y: [0, 1, -1, 1, -1, 0],
+      x: [0, -2],
+      y: [0, 2],
     };
     setTimeout(() => {
       wobbleAnimation.value = { x: 0, y: 0 };
-    }, 300);
+    }, 150);
   }
 });
 </script>

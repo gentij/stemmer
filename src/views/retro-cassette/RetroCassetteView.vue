@@ -24,6 +24,17 @@
     </div>
 
     <div
+      v-if="showUpload"
+      class="fixed top-48 left-1/2 -translate-x-1/2 z-40 w-full max-w-6xl px-4"
+    >
+      <RecentFilesStrip
+        :theme="currentTheme"
+        :recent-files="recentFiles"
+        @file-selected="handleRecentFileSelected"
+      />
+    </div>
+
+    <div
       class="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 relative z-10 flex flex-col items-center my-auto px-4 pt-24"
     >
       <Motion
@@ -88,7 +99,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, nextTick } from "vue";
+import { storeToRefs } from "pinia";
 import { Motion } from "motion-v";
 import { basename } from "@tauri-apps/api/path";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
@@ -100,8 +112,11 @@ import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicat
 import ProcessingActions from "@/components/retro/actions/ProcessingActions.vue";
 import SynthwaveBg from "@/components/retro/background/Background.vue";
 import WindowDragDrop from "@/components/retro/drag-drop/WindowDragDrop.vue";
+import RecentFilesStrip from "@/components/retro/recent-files/RecentFilesStrip.vue";
 import { useRetroCassetteTheme } from "@/composables/useRetroCassetteTheme";
 import { useAudioProcessing } from "@/composables/useAudioProcessing";
+import { useRecentFiles } from "@/composables/useRecentFiles";
+import { useRecentFileLoader } from "@/composables/useRecentFileLoader";
 import { useAudioCoreStore } from "@/stores/audio-core.store";
 
 const { currentTheme, retroCassetteThemes, selectTheme } =
@@ -126,6 +141,9 @@ const renderKey = ref(0);
 
 const audioStore = useAudioCoreStore();
 const { loadFileFromPath } = audioStore;
+const { audioPath } = storeToRefs(audioStore);
+const { recentFiles, addRecentFile } = useRecentFiles();
+const { loadRecentFile } = useRecentFileLoader();
 
 async function handleDroppedFile(path: string) {
   try {
@@ -143,9 +161,35 @@ async function handleDroppedFile(path: string) {
   }
 }
 
-watch(() => status.value, (newStatus) => {
+async function handleRecentFileSelected(path: string) {
+  const success = await loadRecentFile(path);
+  if (success) {
+    await nextTick();
+    renderKey.value++;
+    try {
+      const filename = await basename(path);
+      handleFileLoaded(filename);
+    } catch {
+      const filename = path.split(/[\\/]/).pop() ?? path;
+      handleFileLoaded(filename);
+    }
+  }
+}
+
+watch(() => status.value, async (newStatus) => {
   if (newStatus === "processing" || newStatus === "finished") {
     renderKey.value++;
+  }
+
+  if (newStatus === "finished" && audioPath.value) {
+    const currentPath = audioPath.value;
+    try {
+      const filename = await basename(currentPath);
+      addRecentFile(currentPath, filename);
+    } catch {
+      const filename = currentPath.split(/[\\/]/).pop() ?? currentPath;
+      addRecentFile(currentPath, filename);
+    }
   }
 });
 
