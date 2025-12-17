@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
 import { useSplitterToolStore } from "./splitter-tool.store";
+import { useAudioCoreStore } from "./audio-core.store";
+import { useSettingsStore } from "./settings.store";
 import { join, basename } from "@tauri-apps/api/path";
 import { readFile } from "@tauri-apps/plugin-fs";
 
@@ -9,6 +11,12 @@ interface StemAudio {
   audio: HTMLAudioElement | null;
   volume: number;
   muted: boolean;
+  blobUrl: string | null;
+  handlers?: {
+    loadedmetadata?: () => void;
+    timeupdate?: () => void;
+    ended?: () => void;
+  };
 }
 
 export const useStemsAudioStore = defineStore("stemsAudio", {
@@ -20,6 +28,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.8,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
       drums: {
         id: "drums",
@@ -27,6 +36,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.7,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
       bass: {
         id: "bass",
@@ -34,6 +44,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.75,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
       other: {
         id: "other",
@@ -41,6 +52,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.65,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
     },
     isPlaying: false,
@@ -61,9 +73,25 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
   actions: {
     async loadStems() {
       const splitterStore = useSplitterToolStore();
-      const outputPath = splitterStore.outputPath;
+      const audioStore = useAudioCoreStore();
+      let outputPath = splitterStore.outputPath;
 
       if (!outputPath) return;
+
+      this.reset();
+
+      if (audioStore.audioPath) {
+        const inputFileName = await basename(audioStore.audioPath);
+        const inputFileStem = inputFileName.replace(/\.[^/.]+$/, "");
+        const outputDirName = outputPath ? await basename(outputPath) : null;
+
+        if (inputFileStem && outputDirName && inputFileStem !== outputDirName) {
+          const settingsStore = useSettingsStore();
+          const baseOutputDir = settingsStore.outputDirectory;
+          const correctedOutputPath = await join(baseOutputDir, inputFileStem);
+          outputPath = correctedOutputPath;
+        }
+      }
 
       this.isLoading = true;
 
@@ -84,31 +112,38 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
             const fileData = await readFile(stemPath); 
 
             const blob = new Blob([fileData], { type: "audio/wav" });
-        const audioUrl = URL.createObjectURL(blob);
-
+            const audioUrl = URL.createObjectURL(blob);
 
             const audio = new Audio();
             audio.src = audioUrl;
             audio.volume = this.stems[stemId].volume;
             audio.muted = this.stems[stemId].muted;
 
-            audio.addEventListener("loadedmetadata", () => {
+            this.stems[stemId].blobUrl = audioUrl;
+            this.stems[stemId].handlers = {};
+
+            const onLoadedMetadata = () => {
               if (this.duration === 0 || audio.duration > this.duration) {
                 this.duration = audio.duration;
               }
-            });
+            };
+            audio.addEventListener("loadedmetadata", onLoadedMetadata);
+            this.stems[stemId].handlers!.loadedmetadata = onLoadedMetadata;
 
-            // Only use the first stem (vocals) as the time source to avoid 4x updates
             if (stemId === "vocals") {
-              audio.addEventListener("timeupdate", () => {
+              const onTimeUpdate = () => {
                 if (this.isPlaying) {
                   this.currentTime = audio.currentTime;
                 }
-              });
+              };
+              audio.addEventListener("timeupdate", onTimeUpdate);
+              this.stems[stemId].handlers!.timeupdate = onTimeUpdate;
 
-              audio.addEventListener("ended", () => {
+              const onEnded = () => {
                 this.isPlaying = false;
-              });
+              };
+              audio.addEventListener("ended", onEnded);
+              this.stems[stemId].handlers!.ended = onEnded;
             }
 
             this.stems[stemId].audio = audio;
@@ -253,15 +288,29 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       Object.values(this.stems).forEach((stem) => {
         if (stem.audio) {
           stem.audio.pause();
+          if (stem.handlers) {
+            if (stem.handlers.loadedmetadata) stem.audio.removeEventListener("loadedmetadata", stem.handlers.loadedmetadata);
+            if (stem.handlers.timeupdate) stem.audio.removeEventListener("timeupdate", stem.handlers.timeupdate);
+            if (stem.handlers.ended) stem.audio.removeEventListener("ended", stem.handlers.ended);
+          }
           stem.audio.src = "";
+          stem.audio.load();
           stem.audio = null;
         }
+
+        if (stem.blobUrl) {
+          URL.revokeObjectURL(stem.blobUrl);
+          stem.blobUrl = null;
+        }
+        stem.handlers = {};
       });
 
       this.isPlaying = false;
       this.isLoading = false;
       this.duration = 0;
       this.currentTime = 0;
+      this.pauseTime = 0;
+      this.startTime = 0;
     },
   },
 });

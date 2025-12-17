@@ -26,9 +26,21 @@
     <div
       class="w-full max-w-6xl mx-auto space-y-6 md:space-y-8 relative z-10 flex flex-col items-center my-auto px-4 pt-24"
     >
-      <div class="w-full max-w-3xl">
+      <Motion
+        v-if="showStems || isProcessing"
+        as="div"
+        :key="`cassette-${renderKey}`"
+        class="w-full max-w-3xl"
+        :initial="{ y: 100, opacity: 0 }"
+        :animate="{ y: 0, opacity: 1 }"
+        :transition="{
+          type: 'spring',
+          stiffness: 200,
+          damping: 20,
+        }"
+      >
         <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
-      </div>
+      </Motion>
 
       <ProcessingIndicator
         v-if="isProcessing"
@@ -40,13 +52,25 @@
         :current-stem="currentStem"
       />
 
-      <div v-if="showStems" class="w-full space-y-6">
+      <Motion
+        v-if="showStems"
+        as="div"
+        :key="`stems-${renderKey}`"
+        class="w-full space-y-6"
+        :initial="{ opacity: 0, y: 20 }"
+        :animate="{ opacity: 1, y: 0 }"
+        :transition="{
+          type: 'spring',
+          stiffness: 200,
+          damping: 20,
+        }"
+      >
         <StemControl :theme="currentTheme" />
         
         <div class="flex justify-center">
           <ProcessingActions :theme="currentTheme" :output-path="outputPath" />
         </div>
-      </div>
+      </Motion>
 
       <div v-if="showUpload" class="w-full max-w-3xl">
         <FileUpload
@@ -59,7 +83,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
+import { Motion } from "motion-v";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
 import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
@@ -88,6 +113,14 @@ const {
   handleFileLoaded,
   initialize,
 } = useAudioProcessing();
+
+const renderKey = ref(0);
+
+watch(() => status.value, (newStatus) => {
+  if (newStatus === "processing" || newStatus === "finished") {
+    renderKey.value++;
+  }
+});
 
 onMounted(async () => {
   await initialize();

@@ -1,9 +1,16 @@
 <template>
-  <div
+  <Motion
+    as="div"
     class="w-full aspect-[17/10] rounded-3xl border-2 shadow-[-4px_8px_16px_0_rgba(255,255,255,0.16)] relative overflow-hidden"
     :style="{
       borderColor: theme.borderColor,
       backgroundColor: theme.housingColor,
+    }"
+    :animate="wobbleAnimation"
+    :transition="{
+      type: 'spring',
+      stiffness: 500,
+      damping: 15,
     }"
   >
     <!-- Horizontal Lines Pattern -->
@@ -21,6 +28,7 @@
       <CassetteWindow
         :theme="theme"
         :is-playing="isPlaying"
+        :is-skipping="isSkipping"
         @toggle="$emit('toggle')"
         @back="$emit('back')"
         @forward="$emit('forward')"
@@ -72,10 +80,11 @@
         }"
       />
     </Motion>
-  </div>
+  </Motion>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from "vue";
 import { Motion } from "motion-v";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import CassetteWindow from "./CassetteWindow.vue";
@@ -84,12 +93,27 @@ import CassetteInfoBar from "./CassetteInfoBar.vue";
 
 const Infinity = Number.POSITIVE_INFINITY;
 
-defineProps<{
+const props = defineProps<{
   theme: CassetteTheme;
   isPlaying: boolean;
   gradientId: string;
   trackName: string;
+  isSkipping?: boolean;
 }>();
 
 defineEmits<{ (e: "toggle"): void; (e: "back"): void; (e: "forward"): void }>();
+
+const wobbleAnimation = ref<{ x: number | number[]; y: number | number[] }>({ x: 0, y: 0 });
+
+watch(() => props.isPlaying, (newVal, oldVal) => {
+  if (newVal && !oldVal) {
+    wobbleAnimation.value = {
+      x: [0, -1, 1, -1, 1, 0],
+      y: [0, 1, -1, 1, -1, 0],
+    };
+    setTimeout(() => {
+      wobbleAnimation.value = { x: 0, y: 0 };
+    }, 300);
+  }
+});
 </script>

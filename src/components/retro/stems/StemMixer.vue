@@ -2,7 +2,7 @@
   <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
     <StemItem
       v-for="(stem, index) in stems"
-      :key="`${stem.id}-${stem.name || 'no-blob'}`"
+      :key="stemKeys[index]"
       :stem="stem"
       :theme="props.theme"
       :stem-index="index"
@@ -35,4 +35,8 @@ const stems = computed(() => [
   { ...stemsState.value.bass, volume: stemsState.value.bass.volume * 100, color: "" },
   { ...stemsState.value.other, volume: stemsState.value.other.volume * 100, color: "" },
 ]);
+
+const stemKeys = computed(() => 
+  stems.value.map(stem => `${stem.id}-${stemsState.value[stem.id as keyof typeof stemsState.value]?.audio?.src || 'no-audio'}`)
+);
 </script>

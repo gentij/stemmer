@@ -15,11 +15,14 @@
       <Motion
         as="g"
         class="reel-rotor"
-        :animate="{ rotate: isPlaying ? [0, 360] : 0 }"
+        :style="{
+          filter: props.isSkipping ? 'blur(2px)' : 'none',
+        }"
+        :animate="{ rotate: props.isSkipping ? [0, 360] : props.isPlaying ? [0, 360] : 0 }"
         :transition="{
-          duration: isPlaying ? 3 : 0.3,
-          repeat: isPlaying ? Infinity : 0,
-          ease: isPlaying ? 'linear' : 'easeOut',
+          duration: props.isSkipping ? 0.3 : props.isPlaying ? 3 : 0.3,
+          repeat: (props.isSkipping || props.isPlaying) ? Infinity : 0,
+          ease: (props.isSkipping || props.isPlaying) ? 'linear' : 'easeOut',
           repeatType: 'loop'
         }"
       >
@@ -90,7 +93,9 @@ import type { CassetteTheme } from "@/types/retro/cassete.interface";
 
 const Infinity = Number.POSITIVE_INFINITY;
 
-defineProps<{ theme: CassetteTheme; isPlaying: boolean }>();
+const props = withDefaults(defineProps<{ theme: CassetteTheme; isPlaying: boolean; isSkipping?: boolean }>(), {
+  isSkipping: false,
+});
 </script>
 
 <style scoped>

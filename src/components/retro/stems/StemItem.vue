@@ -1,5 +1,7 @@
 <template>
   <Motion
+    as="div"
+    :key="audioSrc || stem.id"
     :initial="{ opacity: 0, y: 20 }"
     :animate="{ opacity: 1, y: 0 }"
     :transition="{
@@ -8,7 +10,7 @@
       damping: 20,
       delay: stemIndex * 0.1
     }"
-    class="flex flex-col gap-3 p-4 rounded-2xl border-2"
+    class="flex flex-col gap-3 p-4 rounded-2xl border-2 relative z-10"
     :style="{
       borderColor: stemColor,
       backgroundColor: 'rgba(13, 13, 13, 0.8)',

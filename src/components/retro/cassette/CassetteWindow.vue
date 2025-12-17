@@ -63,7 +63,7 @@
           backgroundColor: theme.controlBg,
         }"
       >
-        <CassetteReel :theme="theme" :is-playing="isPlaying" />
+        <CassetteReel :theme="theme" :is-playing="isPlaying" :is-skipping="isSkipping" />
 
         <CassetteControls
           :is-playing="isPlaying"
@@ -72,7 +72,7 @@
           @forward="$emit('forward')"
         />
 
-        <CassetteReel :theme="theme" :is-playing="isPlaying" />
+        <CassetteReel :theme="theme" :is-playing="isPlaying" :is-skipping="isSkipping" />
       </div>
     </div>
   </div>
@@ -83,7 +83,7 @@ import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import CassetteReel from "./CassetteReel.vue";
 import CassetteControls from "./CassetteControls.vue";
 
-defineProps<{ theme: CassetteTheme; isPlaying: boolean }>();
+defineProps<{ theme: CassetteTheme; isPlaying: boolean; isSkipping?: boolean }>();
 
 defineEmits<{ (e: "toggle"): void; (e: "back"): void; (e: "forward"): void }>();
 </script>
