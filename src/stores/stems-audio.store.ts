@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
 import { useSplitterToolStore } from "./splitter-tool.store";
+import { useAudioCoreStore } from "./audio-core.store";
+import { useSettingsStore } from "./settings.store";
 import { join, basename } from "@tauri-apps/api/path";
 import { readFile } from "@tauri-apps/plugin-fs";
 
@@ -9,6 +11,7 @@ interface StemAudio {
   audio: HTMLAudioElement | null;
   volume: number;
   muted: boolean;
+  blobUrl: string | null;
 }
 
 export const useStemsAudioStore = defineStore("stemsAudio", {
@@ -20,6 +23,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.8,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
       drums: {
         id: "drums",
@@ -27,6 +31,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.7,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
       bass: {
         id: "bass",
@@ -34,6 +39,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.75,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
       other: {
         id: "other",
@@ -41,6 +47,7 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         audio: null,
         volume: 0.65,
         muted: false,
+        blobUrl: null,
       } as StemAudio,
     },
     isPlaying: false,
@@ -61,9 +68,24 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
   actions: {
     async loadStems() {
       const splitterStore = useSplitterToolStore();
-      const outputPath = splitterStore.outputPath;
+      const audioStore = useAudioCoreStore();
+      let outputPath = splitterStore.outputPath;
 
       if (!outputPath) return;
+
+      if (audioStore.audioPath) {
+        const inputFileName = await basename(audioStore.audioPath);
+        const inputFileStem = inputFileName.replace(/\.[^/.]+$/, "");
+        const outputDirName = outputPath ? await basename(outputPath) : null;
+        
+        if (inputFileStem && outputDirName && inputFileStem !== outputDirName) {
+          const settingsStore = useSettingsStore();
+          const baseOutputDir = settingsStore.outputDirectory;
+          outputPath = await join(baseOutputDir, inputFileStem);
+        }
+      }
+
+      this.reset();
 
       this.isLoading = true;
 
@@ -81,16 +103,16 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
           const stemPath = await join(outputPath, stemFileName);
 
           try {
-            const fileData = await readFile(stemPath); 
-
+            const fileData = await readFile(stemPath);
             const blob = new Blob([fileData], { type: "audio/wav" });
-        const audioUrl = URL.createObjectURL(blob);
-
+            const audioUrl = URL.createObjectURL(blob);
 
             const audio = new Audio();
             audio.src = audioUrl;
             audio.volume = this.stems[stemId].volume;
             audio.muted = this.stems[stemId].muted;
+
+            this.stems[stemId].blobUrl = audioUrl;
 
             audio.addEventListener("loadedmetadata", () => {
               if (this.duration === 0 || audio.duration > this.duration) {
@@ -253,8 +275,17 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       Object.values(this.stems).forEach((stem) => {
         if (stem.audio) {
           stem.audio.pause();
+          stem.audio.removeEventListener("timeupdate", () => {});
+          stem.audio.removeEventListener("ended", () => {});
+          stem.audio.removeEventListener("loadedmetadata", () => {});
           stem.audio.src = "";
+          stem.audio.load();
           stem.audio = null;
+        }
+
+        if (stem.blobUrl) {
+          URL.revokeObjectURL(stem.blobUrl);
+          stem.blobUrl = null;
         }
       });
 
@@ -262,6 +293,8 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
       this.isLoading = false;
       this.duration = 0;
       this.currentTime = 0;
+      this.pauseTime = 0;
+      this.startTime = 0;
     },
   },
 });

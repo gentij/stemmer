@@ -183,6 +183,12 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
     }
   }
 
+  watch(() => audioSrc, (newSrc, oldSrc) => {
+    if (newSrc && newSrc !== oldSrc && wavesurfer.value) {
+      reload();
+    }
+  }, { immediate: false });
+
   onMounted(() => {
     initialize();
   });

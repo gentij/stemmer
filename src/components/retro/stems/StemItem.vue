@@ -16,6 +16,7 @@
   >
     <StemWaveform
       v-if="audioSrc"
+      :key="audioSrc"
       :stem-id="stem.id"
       :stem-name="stem.name"
       :audio-src="audioSrc"

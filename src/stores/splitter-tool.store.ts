@@ -114,7 +114,6 @@ export const useSplitterToolStore = defineStore("splitterTool", {
           case "finished":
             this.status = "finished";
             this.outputPath = payload.output_path || settingsStore.outputDirectory;
-            console.log("✅ Split finished, output at:", this.outputPath);
             break;
 
           default:
@@ -132,7 +131,6 @@ export const useSplitterToolStore = defineStore("splitterTool", {
         if (isNotTerminalState) {
           this.status = "finished";
           this.outputPath = result || settingsStore.outputDirectory;
-          console.log("✅ Split complete, output at:", this.outputPath);
         }
       } catch (error: any) {
         this.status = "error";

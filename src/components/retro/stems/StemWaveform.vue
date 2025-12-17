@@ -57,9 +57,6 @@ const { isLoading } = useWaveform(waveformRef, {
     cursorColor: props.theme.goldText,
   },
   height: props.height,
-  onLoad: () => {
-    console.log(`Waveform loaded for ${props.stemName}`);
-  },
   onError: (error) => {
     console.error(`Failed to load waveform for ${props.stemName}:`, error);
   },

@@ -34,7 +34,7 @@
         <Volume2 
           :size="24"
           :color="muted ? 'white' : '#0D041D'"
-        />
+      />
       </Motion>
 
       <Motion
@@ -53,7 +53,7 @@
         <VolumeX 
           :size="24"
           color="white"
-        />
+      />
       </Motion>
     </div>
   </Motion>

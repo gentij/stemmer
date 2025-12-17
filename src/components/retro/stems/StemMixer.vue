@@ -2,7 +2,7 @@
   <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
     <StemItem
       v-for="(stem, index) in stems"
-      :key="stem.id"
+      :key="`${stem.id}-${stem.blobUrl || 'no-blob'}`"
       :stem="stem"
       :theme="props.theme"
       :stem-index="index"
