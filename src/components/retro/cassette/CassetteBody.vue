@@ -43,14 +43,46 @@
 
     <!-- Info Bar -->
     <CassetteInfoBar :theme="theme" :track-name="trackName" />
+
+    <!-- Light Reflection Sweep -->
+    <Motion
+      class="absolute inset-0 pointer-events-none z-10"
+      :animate="{
+        x: ['-50%', '150%'],
+      }"
+      :transition="{
+        duration: 2.5,
+        repeat: Infinity,
+        repeatDelay: 12.5,
+        ease: [0.4, 0, 0.2, 1],
+      }"
+    >
+      <div
+        class="w-1/2 h-full"
+        :style="{
+          background: `linear-gradient(90deg, 
+            transparent 0%, 
+            rgba(255, 255, 255, 0.15) 20%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0.15) 80%,
+            transparent 100%
+          )`,
+          filter: 'blur(30px)',
+          transform: 'skewX(-20deg)',
+        }"
+      />
+    </Motion>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Motion } from "motion-v";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import CassetteWindow from "./CassetteWindow.vue";
 import CassetteScrew from "./CassetteScrew.vue";
 import CassetteInfoBar from "./CassetteInfoBar.vue";
+
+const Infinity = Number.POSITIVE_INFINITY;
 
 defineProps<{
   theme: CassetteTheme;
