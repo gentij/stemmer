@@ -12,18 +12,11 @@
         :fill="theme.reelOuter"
         :stroke="theme.reelStroke"
       />
-      <Motion
-        as="g"
+      <g
         class="reel-rotor"
+        :class="{ 'reel-playing': props.isPlaying, 'reel-skipping': props.isSkipping }"
         :style="{
           filter: props.isSkipping ? 'blur(2px)' : 'none',
-        }"
-        :animate="{ rotate: props.isSkipping ? [0, 360] : props.isPlaying ? [0, 360] : 0 }"
-        :transition="{
-          duration: props.isSkipping ? 0.3 : props.isPlaying ? 3 : 0.3,
-          repeat: (props.isSkipping || props.isPlaying) ? Infinity : 0,
-          ease: (props.isSkipping || props.isPlaying) ? 'linear' : 'easeOut',
-          repeatType: 'loop'
         }"
       >
         <ellipse
@@ -82,16 +75,13 @@
           transform="matrix(0.00461716 0.999989 0.999989 -0.00461716 4 14.4431)"
           :fill="theme.reelCenter"
         />
-      </Motion>
+      </g>
     </svg>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Motion } from "motion-v";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
-
-const Infinity = Number.POSITIVE_INFINITY;
 
 const props = withDefaults(defineProps<{ theme: CassetteTheme; isPlaying: boolean; isSkipping?: boolean }>(), {
   isSkipping: false,
@@ -106,5 +96,32 @@ svg {
 .reel-rotor {
   transform-box: fill-box;
   transform-origin: 50% 50%;
+  transition: transform 0.3s ease-out;
+}
+
+.reel-playing {
+  animation: reel-rotate 3s linear infinite;
+}
+
+.reel-skipping {
+  animation: reel-rotate-fast 0.3s linear infinite;
+}
+
+@keyframes reel-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes reel-rotate-fast {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
