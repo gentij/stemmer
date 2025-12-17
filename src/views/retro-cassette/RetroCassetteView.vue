@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen flex items-center justify-center py-16 px-4 overflow-y-auto retro-background"
+    class="min-h-screen flex items-center justify-center py-16 px-4 overflow-y-auto retro-background relative"
   >
     <SynthwaveBg
       :theme="currentTheme"
@@ -79,12 +79,18 @@
         />
       </div>
     </div>
+
+    <WindowDragDrop
+      :theme="currentTheme"
+      @file-dropped="handleDroppedFile"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
 import { Motion } from "motion-v";
+import { basename } from "@tauri-apps/api/path";
 import CassettePlayer from "@/components/retro/cassette/Cassette.vue";
 import StemControl from "@/components/retro/stems/StemMixer.vue";
 import ThemeKnob from "@/components/retro/theme-knob/ThemeKnob.vue";
@@ -93,8 +99,10 @@ import FileUpload from "@/components/retro/upload/FileUpload.vue";
 import ProcessingIndicator from "@/components/retro/processing/ProcessingIndicator.vue";
 import ProcessingActions from "@/components/retro/actions/ProcessingActions.vue";
 import SynthwaveBg from "@/components/retro/background/Background.vue";
+import WindowDragDrop from "@/components/retro/drag-drop/WindowDragDrop.vue";
 import { useRetroCassetteTheme } from "@/composables/useRetroCassetteTheme";
 import { useAudioProcessing } from "@/composables/useAudioProcessing";
+import { useAudioCoreStore } from "@/stores/audio-core.store";
 
 const { currentTheme, retroCassetteThemes, selectTheme } =
   useRetroCassetteTheme();
@@ -116,6 +124,25 @@ const {
 
 const renderKey = ref(0);
 
+const audioStore = useAudioCoreStore();
+const { loadFileFromPath } = audioStore;
+
+async function handleDroppedFile(path: string) {
+  try {
+    await loadFileFromPath(path);
+
+    try {
+      const filename = await basename(path);
+      handleFileLoaded(filename);
+    } catch {
+      const filename = path.split(/[\\/]/).pop() ?? path;
+      handleFileLoaded(filename);
+    }
+  } catch (error) {
+    console.error('Failed to load file:', error);
+  }
+}
+
 watch(() => status.value, (newStatus) => {
   if (newStatus === "processing" || newStatus === "finished") {
     renderKey.value++;
@@ -126,4 +153,5 @@ onMounted(async () => {
   await initialize();
 });
 </script>
+
 
