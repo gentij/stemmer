@@ -61,7 +61,8 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
     currentTime: 0,
     audioContext: null as AudioContext | null,
     startTime: 0, 
-    pauseTime: 0, 
+    pauseTime: 0,
+    volumesLocked: false,
   }),
 
   getters: {
@@ -273,6 +274,20 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         const clampedVolume = Math.max(0, Math.min(1, volume));
         stem.volume = clampedVolume;
         stem.audio.volume = clampedVolume;
+
+        if (this.volumesLocked) {
+          Object.keys(this.stems).forEach((id) => {
+            if (id !== stemId) {
+              const otherStem = this.stems[id as keyof typeof this.stems];
+              if (otherStem) {
+                otherStem.volume = clampedVolume;
+                if (otherStem.audio) {
+                  otherStem.audio.volume = clampedVolume;
+                }
+              }
+            }
+          });
+        }
       }
     },
 
@@ -282,6 +297,22 @@ export const useStemsAudioStore = defineStore("stemsAudio", {
         stem.muted = muted;
         stem.audio.muted = muted;
       }
+    },
+
+    toggleMuteAll() {
+      const allMuted = Object.values(this.stems).every((stem) => stem.muted);
+      const newMutedState = !allMuted;
+
+      Object.values(this.stems).forEach((stem) => {
+        if (stem.audio) {
+          stem.muted = newMutedState;
+          stem.audio.muted = newMutedState;
+        }
+      });
+    },
+
+    toggleVolumesLocked() {
+      this.volumesLocked = !this.volumesLocked;
     },
 
     reset() {

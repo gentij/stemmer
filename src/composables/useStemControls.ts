@@ -17,7 +17,16 @@ export function useStemControls(options: StemControlsOptions) {
 
   function setVolumeDirectly(volume: number) {
     if (stemData.value?.audio) {
-      stemData.value.audio.volume = Math.max(0, Math.min(1, volume));
+      const clampedVolume = Math.max(0, Math.min(1, volume));
+      stemData.value.audio.volume = clampedVolume;
+
+      if (stemsAudioStore.volumesLocked) {
+        Object.values(stemsAudioStore.stems).forEach((otherStem) => {
+          if (otherStem.id !== stemId && otherStem.audio) {
+            otherStem.audio.volume = clampedVolume;
+          }
+        });
+      }
     }
   }
 

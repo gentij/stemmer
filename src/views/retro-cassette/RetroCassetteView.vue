@@ -95,6 +95,8 @@
       :theme="currentTheme"
       @file-dropped="handleDroppedFile"
     />
+
+    <AppFooter :theme="currentTheme" />
   </div>
 </template>
 
@@ -113,6 +115,7 @@ import ProcessingActions from "@/components/retro/actions/ProcessingActions.vue"
 import SynthwaveBg from "@/components/retro/background/Background.vue";
 import WindowDragDrop from "@/components/retro/drag-drop/WindowDragDrop.vue";
 import RecentFilesStrip from "@/components/retro/recent-files/RecentFilesStrip.vue";
+import AppFooter from "@/components/retro/footer/AppFooter.vue";
 import { useRetroCassetteTheme } from "@/composables/useRetroCassetteTheme";
 import { useAudioProcessing } from "@/composables/useAudioProcessing";
 import { useRecentFiles } from "@/composables/useRecentFiles";
