@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center w-[100px]">
+  <div class="flex flex-col items-center w-[110px]">
     <div
       ref="knob"
       class="relative w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center cursor-grab select-none outline-none mx-auto"
