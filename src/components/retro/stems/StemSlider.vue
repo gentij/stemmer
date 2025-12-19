@@ -11,7 +11,7 @@
         :animate="{ scale: isDragging ? 1.1 : 1 }"
         :transition="{ type: 'spring', stiffness: 400, damping: 25 }"
       >
-        <span class="text-white/60 text-xs md:text-sm">{{ displayVolume }}%</span>
+        <span class="text-white/60 text-xs md:text-sm">{{ displayVolume.toFixed(0) }}%</span>
       </Motion>
     </div>
     <input
