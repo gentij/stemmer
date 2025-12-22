@@ -1,10 +1,15 @@
 <svg
   width="512"
   height="512"
-  viewBox="0 0 512 512"
+  viewBox="24 24 464 464"
   xmlns="http://www.w3.org/2000/svg"
 >
   <defs>
+    <!-- Clip to rounded app icon shape -->
+    <clipPath id="clip">
+      <rect x="24" y="24" width="464" height="464" rx="96" />
+    </clipPath>
+
     <!-- Neutral background -->
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#111827" />
@@ -18,34 +23,37 @@
     </linearGradient>
   </defs>
 
-  <!-- Rounded app background -->
-  <rect
-    x="24"
-    y="24"
-    width="464"
-    height="464"
-    rx="96"
-    fill="url(#bg)"
-  />
+  <!-- Everything clipped to rounded shape -->
+  <g clip-path="url(#clip)">
+    <!-- Rounded app background -->
+    <rect
+      x="24"
+      y="24"
+      width="464"
+      height="464"
+      rx="96"
+      fill="url(#bg)"
+    />
 
-  <!-- Vertical stems -->
-  <g>
-    <rect x="148" y="180" width="28" height="160" rx="14" fill="url(#stem)" />
-    <rect x="198" y="130" width="28" height="260" rx="14" fill="url(#stem)" />
-    <rect x="248" y="100" width="32" height="320" rx="16" fill="url(#stem)" />
-    <rect x="308" y="150" width="28" height="220" rx="14" fill="url(#stem)" />
-    <rect x="358" y="210" width="28" height="120" rx="14" fill="url(#stem)" />
+    <!-- Vertical stems -->
+    <g>
+      <rect x="148" y="180" width="28" height="160" rx="14" fill="url(#stem)" />
+      <rect x="198" y="130" width="28" height="260" rx="14" fill="url(#stem)" />
+      <rect x="248" y="100" width="32" height="320" rx="16" fill="url(#stem)" />
+      <rect x="308" y="150" width="28" height="220" rx="14" fill="url(#stem)" />
+      <rect x="358" y="210" width="28" height="120" rx="14" fill="url(#stem)" />
+    </g>
+
+    <!-- Waveform -->
+    <path
+      d="M80 256
+         C140 230, 180 280, 240 256
+         C300 230, 340 280, 432 256"
+      fill="none"
+      stroke="#60a5fa"
+      stroke-width="10"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
   </g>
-
-  <!-- Waveform -->
-  <path
-    d="M80 256
-       C140 230, 180 280, 240 256
-       C300 230, 340 280, 432 256"
-    fill="none"
-    stroke="#60a5fa"
-    stroke-width="10"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
 </svg>
