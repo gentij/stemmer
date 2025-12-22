@@ -30,7 +30,7 @@
       <RecentFilesStrip
         :theme="currentTheme"
         :recent-files="recentFiles"
-        @file-selected="handleRecentFileSelected"
+        @fileSelected="handleRecentFileSelected"
       />
     </div>
 
@@ -42,13 +42,13 @@
         as="div"
         :key="`cassette-${renderKey}`"
         class="w-full max-w-3xl"
-        :initial="{ y: 100, opacity: 0 }"
+        :initial="animationsEnabled ? { y: 100, opacity: 0 } : { y: 0, opacity: 1 }"
         :animate="{ y: 0, opacity: 1 }"
-        :transition="{
+        :transition="animationsEnabled ? {
           type: 'spring',
           stiffness: 200,
           damping: 20,
-        }"
+        } : { duration: 0 }"
       >
         <CassettePlayer :theme="currentTheme" :track-name="currentTrack" />
       </Motion>
@@ -61,6 +61,7 @@
         :progress="progress"
         :current-stage="currentStage"
         :current-stem="currentStem"
+        @cancel="handleCancelProcessing"
       />
 
       <Motion
@@ -68,13 +69,13 @@
         as="div"
         :key="`stems-${renderKey}`"
         class="w-full space-y-6"
-        :initial="{ opacity: 0, y: 20 }"
+        :initial="animationsEnabled ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }"
         :animate="{ opacity: 1, y: 0 }"
-        :transition="{
+        :transition="animationsEnabled ? {
           type: 'spring',
           stiffness: 200,
           damping: 20,
-        }"
+        } : { duration: 0 }"
       >
         <StemControl :theme="currentTheme" />
         
@@ -121,6 +122,9 @@ import { useAudioProcessing } from "@/composables/useAudioProcessing";
 import { useRecentFiles } from "@/composables/useRecentFiles";
 import { useRecentFileLoader } from "@/composables/useRecentFileLoader";
 import { useAudioCoreStore } from "@/stores/audio-core.store";
+import { useToast } from "@/composables/useToast";
+import { useSettingsStore } from "@/stores/settings.store";
+import { useSplitterToolStore } from "@/stores/splitter-tool.store";
 
 const { currentTheme, retroCassetteThemes, selectTheme } =
   useRetroCassetteTheme();
@@ -147,6 +151,15 @@ const { loadFileFromPath } = audioStore;
 const { audioPath } = storeToRefs(audioStore);
 const { recentFiles, addRecentFile } = useRecentFiles();
 const { loadRecentFile } = useRecentFileLoader();
+const toast = useToast();
+const settingsStore = useSettingsStore();
+const { animationsEnabled } = storeToRefs(settingsStore);
+const splitterStore = useSplitterToolStore();
+
+function handleCancelProcessing() {
+  splitterStore.cancel();
+  toast.info("Processing cancelled");
+}
 
 async function handleDroppedFile(path: string) {
   try {
@@ -160,20 +173,20 @@ async function handleDroppedFile(path: string) {
       handleFileLoaded(filename);
     }
   } catch (error) {
-    console.error('Failed to load file:', error);
+    toast.error('Failed to load audio file. Please try again.');
   }
 }
 
-async function handleRecentFileSelected(path: string) {
-  const success = await loadRecentFile(path);
+async function handleRecentFileSelected(file: { path: string; outputPath?: string }) {
+  const success = await loadRecentFile(file);
   if (success) {
     await nextTick();
     renderKey.value++;
     try {
-      const filename = await basename(path);
+      const filename = await basename(file.path);
       handleFileLoaded(filename);
     } catch {
-      const filename = path.split(/[\\/]/).pop() ?? path;
+      const filename = file.path.split(/[\\/]/).pop() ?? file.path;
       handleFileLoaded(filename);
     }
   }
@@ -184,14 +197,14 @@ watch(() => status.value, async (newStatus) => {
     renderKey.value++;
   }
 
-  if (newStatus === "finished" && audioPath.value) {
+  if (newStatus === "finished" && audioPath.value && outputPath.value) {
     const currentPath = audioPath.value;
     try {
       const filename = await basename(currentPath);
-      addRecentFile(currentPath, filename);
+      addRecentFile(currentPath, filename, outputPath.value);
     } catch {
       const filename = currentPath.split(/[\\/]/).pop() ?? currentPath;
-      addRecentFile(currentPath, filename);
+      addRecentFile(currentPath, filename, outputPath.value);
     }
   }
 });

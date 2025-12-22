@@ -103,10 +103,16 @@ const props = defineProps<{
 
 defineEmits<{ (e: "toggle"): void; (e: "back"): void; (e: "forward"): void }>();
 
+import { useSettingsStore } from "@/stores/settings.store";
+import { storeToRefs } from "pinia";
+
+const settingsStore = useSettingsStore();
+const { animationsEnabled } = storeToRefs(settingsStore);
+
 const wobbleAnimation = ref<{ x: number | number[]; y: number | number[] }>({ x: 0, y: 0 });
 
 watch(() => props.isPlaying, (newVal, oldVal) => {
-  if (newVal && !oldVal) {
+  if (newVal && !oldVal && animationsEnabled.value) {
     wobbleAnimation.value = {
       x: [0, -2],
       y: [0, 2],

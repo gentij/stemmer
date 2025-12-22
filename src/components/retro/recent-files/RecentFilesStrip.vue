@@ -19,7 +19,7 @@
       <button
         v-for="file in recentFiles"
         :key="file.path"
-        @click="$emit('fileSelected', file.path)"
+        @click="$emit('fileSelected', file)"
         class="flex-shrink-0 px-4 py-2 rounded-lg border-2 transition-all hover:scale-105"
         :style="{
           borderColor: `${theme.borderColor}60`,
@@ -67,13 +67,13 @@ import type { CassetteTheme } from "@/types/retro/cassete.interface";
 
 interface Props {
   theme: CassetteTheme;
-  recentFiles: Array<{ path: string; name: string; processedAt: number }>;
+  recentFiles: Array<{ path: string; name: string; outputPath?: string; processedAt: number }>;
 }
 
 defineProps<Props>();
 
 defineEmits<{
-  (e: "fileSelected", path: string): void;
+  (e: "fileSelected", file: { path: string; outputPath?: string }): void;
 }>();
 </script>
 

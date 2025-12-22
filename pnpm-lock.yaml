@@ -53,6 +53,9 @@ importers:
       vue-router:
         specifier: ^4.6.3
         version: 4.6.3(vue@3.5.18(typescript@5.6.3))
+      vue-toastification:
+        specifier: 2.0.0-rc.5
+        version: 2.0.0-rc.5(vue@3.5.18(typescript@5.6.3))
       wavesurfer.js:
         specifier: ^7.8.7
         version: 7.10.1
@@ -1109,6 +1112,11 @@ packages:
     peerDependencies:
       vue: ^3.5.0
 
+  vue-toastification@2.0.0-rc.5:
+    resolution: {integrity: sha512-q73e5jy6gucEO/U+P48hqX+/qyXDozAGmaGgLFm5tXX4wJBcVsnGp4e/iJqlm9xzHETYOilUuwOUje2Qg1JdwA==}
+    peerDependencies:
+      vue: ^3.0.2
+
   vue-tsc@2.2.12:
     resolution: {integrity: sha512-P7OP77b2h/Pmk+lZdJ0YWs+5tJ6J2+uOQPo7tlBnY44QqQSPYvS0qVT4wqDJgwrZaLe47etJLLQRFia71GYITw==}
     hasBin: true
@@ -2001,6 +2009,10 @@ snapshots:
   vue-router@4.6.3(vue@3.5.18(typescript@5.6.3)):
     dependencies:
       '@vue/devtools-api': 6.6.4
+      vue: 3.5.18(typescript@5.6.3)
+
+  vue-toastification@2.0.0-rc.5(vue@3.5.18(typescript@5.6.3)):
+    dependencies:
       vue: 3.5.18(typescript@5.6.3)
 
   vue-tsc@2.2.12(typescript@5.6.3):

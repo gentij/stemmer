@@ -20,6 +20,7 @@ import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import { defaultCassetteTheme } from "@/constants/retro/cassete";
 import { useStemsAudioStore } from "@/stores/stems-audio.store";
 import { useSplitterToolStore } from "@/stores/splitter-tool.store";
+import { useSettingsStore } from "@/stores/settings.store";
 import CassetteBody from "./CassetteBody.vue";
 import tapeInsertSound from "@/assets/sounds/tape-recorder-start.wav";
 
@@ -35,13 +36,16 @@ const props = withDefaults(defineProps<Props>(), {
 
 const stemsAudioStore = useStemsAudioStore();
 const splitterStore = useSplitterToolStore();
+const settingsStore = useSettingsStore();
 const { isPlaying } = storeToRefs(stemsAudioStore);
 const { status } = storeToRefs(splitterStore);
+const { soundEnabled } = storeToRefs(settingsStore);
 
 const uniqueId = Math.random().toString(36).slice(2);
 const isSkipping = ref(false);
 
 function playTapeInsertSound() {
+  if (!soundEnabled.value) return;
   const audio = new Audio(tapeInsertSound);
   audio.volume = 0.3;
   audio.play().catch(() => {});

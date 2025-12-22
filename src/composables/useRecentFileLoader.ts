@@ -5,6 +5,7 @@ import { useSplitterToolStore } from "@/stores/splitter-tool.store";
 import { useStemsAudioStore } from "@/stores/stems-audio.store";
 import { useSettingsStore } from "@/stores/settings.store";
 import { useRecentFiles } from "./useRecentFiles";
+import { useToast } from "./useToast";
 
 export function useRecentFileLoader() {
   const audioStore = useAudioCoreStore();
@@ -12,13 +13,20 @@ export function useRecentFileLoader() {
   const stemsAudioStore = useStemsAudioStore();
   const settingsStore = useSettingsStore();
   const { removeRecentFile } = useRecentFiles();
+  const toast = useToast();
 
-  async function loadRecentFile(path: string): Promise<boolean> {
+  async function loadRecentFile(recentFile: { path: string; outputPath?: string }): Promise<boolean> {
     try {
-      const inputFileName = await basename(path);
+      const inputFileName = await basename(recentFile.path);
       const inputFileStem = inputFileName.replace(/\.[^/.]+$/, "");
-      const baseOutputDir = settingsStore.outputDirectory;
-      const expectedOutputPath = await join(baseOutputDir, inputFileStem);
+      
+      let expectedOutputPath: string;
+      if (recentFile.outputPath) {
+        expectedOutputPath = recentFile.outputPath;
+      } else {
+        const baseOutputDir = settingsStore.outputDirectory;
+        expectedOutputPath = await join(baseOutputDir, inputFileStem);
+      }
       
       const testStemPath = await join(expectedOutputPath, `${inputFileStem}_vocals.wav`);
       
@@ -27,7 +35,7 @@ export function useRecentFileLoader() {
         
         splitterStore.resetProgress();
         splitterStore.outputPath = expectedOutputPath;
-        await audioStore.loadFileFromPath(path);
+        await audioStore.loadFileFromPath(recentFile.path);
         
         await stemsAudioStore.loadStems();
         
@@ -35,12 +43,12 @@ export function useRecentFileLoader() {
         
         return true;
       } catch {
-        removeRecentFile(path);
+        removeRecentFile(recentFile.path);
         return false;
       }
     } catch (error) {
-      console.error('Failed to load recent file:', error);
-      removeRecentFile(path);
+      toast.error('Failed to load recent file. It may have been moved or deleted.');
+      removeRecentFile(recentFile.path);
       return false;
     }
   }

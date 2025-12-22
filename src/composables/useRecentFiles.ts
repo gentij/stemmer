@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 export interface RecentFile {
   path: string;
   name: string;
+  outputPath: string;
   processedAt: number;
 }
 
@@ -34,10 +35,11 @@ export function useRecentFiles() {
 
   const recentFilesList = computed(() => recentFiles.value.slice(0, MAX_RECENT_FILES));
 
-  function addRecentFile(path: string, name: string) {
+  function addRecentFile(path: string, name: string, outputPath: string) {
     const newFile: RecentFile = {
       path,
       name,
+      outputPath,
       processedAt: Date.now(),
     };
 

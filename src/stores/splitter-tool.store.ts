@@ -20,6 +20,8 @@ interface ProgressState {
   errorMessage: string;
   
   outputPath: string;
+  
+  unlistenFn: (() => void) | null;
 }
 
 export const useSplitterToolStore = defineStore("splitterTool", {
@@ -32,6 +34,7 @@ export const useSplitterToolStore = defineStore("splitterTool", {
     writingPercent: 0,
     errorMessage: "",
     outputPath: "",
+    unlistenFn: null,
   }),
 
   getters: {
@@ -61,6 +64,10 @@ export const useSplitterToolStore = defineStore("splitterTool", {
 
   actions: {
     resetProgress() {
+      if (this.unlistenFn) {
+        this.unlistenFn();
+        this.unlistenFn = null;
+      }
       this.status = "idle";
       this.downloadedBytes = 0;
       this.totalBytes = 0;
@@ -69,6 +76,21 @@ export const useSplitterToolStore = defineStore("splitterTool", {
       this.writingPercent = 0;
       this.errorMessage = "";
       this.outputPath = "";
+    },
+
+    cancel() {
+      if (this.unlistenFn) {
+        this.unlistenFn();
+        this.unlistenFn = null;
+      }
+      this.status = "idle";
+      this.downloadedBytes = 0;
+      this.totalBytes = 0;
+      this.currentStage = "";
+      this.currentStem = "";
+      this.writingPercent = 0;
+      this.errorMessage = "";
+      // Keep outputPath in case user wants to retry
     },
 
     async split() {
@@ -91,6 +113,10 @@ export const useSplitterToolStore = defineStore("splitterTool", {
       this.status = "downloading";
 
       const unlisten = await listen("split-progress", (evt) => {
+        if (this.status === "idle") {
+          return;
+        }
+
         const payload = evt.payload as any;
 
         switch (payload.kind) {
@@ -121,6 +147,8 @@ export const useSplitterToolStore = defineStore("splitterTool", {
         }
       });
 
+      this.unlistenFn = unlisten;
+
       try {
         const result = await splitStems({ 
           input, 
@@ -133,10 +161,17 @@ export const useSplitterToolStore = defineStore("splitterTool", {
           this.outputPath = result || settingsStore.outputDirectory;
         }
       } catch (error: any) {
-        this.status = "error";
-        this.errorMessage = error?.message || error?.toString() || "An unknown error occurred";
+        // Only set error if we're still in a processing state (not cancelled or already finished)
+        const isProcessingState = ["downloading", "processing", "writing"].includes(this.status);
+        if (isProcessingState) {
+          this.status = "error";
+          this.errorMessage = error?.message || error?.toString() || "An unknown error occurred";
+        }
       } finally {
-        unlisten();
+        if (this.unlistenFn === unlisten) {
+          unlisten();
+          this.unlistenFn = null;
+        }
       }
     },
   },

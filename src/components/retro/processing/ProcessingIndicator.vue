@@ -54,6 +54,18 @@
                 </p>
               </div>
             </div>
+            <button
+              v-if="showCancelButton"
+              @click="$emit('cancel')"
+              class="px-4 py-2 rounded-lg border-2 transition-all hover:scale-105 active:scale-95 text-sm font-mono font-medium"
+              :style="{
+                borderColor: theme.borderColor,
+                backgroundColor: 'transparent',
+                color: theme.borderColor,
+              }"
+            >
+              Cancel
+            </button>
           </div>
 
           <div class="space-y-2">
@@ -171,6 +183,10 @@ const showStageDisplay = computed(() => {
   return props.status === "processing" && props.currentStage;
 });
 
+const showCancelButton = computed(() => {
+  return props.status === "downloading" || props.status === "processing" || props.status === "writing";
+});
+
 const formattedStage = computed(() => {
   if (!props.currentStage) return "";
   
@@ -182,6 +198,10 @@ const formattedStage = computed(() => {
   
   return `> ${stage}`;
 });
+
+defineEmits<{
+  (e: "cancel"): void;
+}>();
 </script>
 
 <style scoped>

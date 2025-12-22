@@ -4,6 +4,9 @@ import { documentDir, join } from "@tauri-apps/api/path";
 interface SettingsState {
   outputDirectory: string;
   isInitialized: boolean;
+  themeRoute: string;
+  animationsEnabled: boolean;
+  soundEnabled: boolean;
 }
 
 const SETTINGS_STORAGE_KEY = "stemmer-settings";
@@ -12,6 +15,9 @@ export const useSettingsStore = defineStore("settings", {
   state: (): SettingsState => ({
     outputDirectory: "",
     isInitialized: false,
+    themeRoute: "retro-cassette",
+    animationsEnabled: true,
+    soundEnabled: true,
   }),
 
   getters: {
@@ -29,6 +35,9 @@ export const useSettingsStore = defineStore("settings", {
         try {
           const parsed = JSON.parse(stored);
           this.outputDirectory = parsed.outputDirectory || "";
+          this.themeRoute = parsed.themeRoute || "retro-cassette";
+          this.animationsEnabled = parsed.animationsEnabled !== undefined ? parsed.animationsEnabled : true;
+          this.soundEnabled = parsed.soundEnabled !== undefined ? parsed.soundEnabled : true;
         } catch (error) {
           console.error("Failed to parse stored settings:", error);
         }
@@ -57,8 +66,26 @@ export const useSettingsStore = defineStore("settings", {
     persist() {
       const data = {
         outputDirectory: this.outputDirectory,
+        themeRoute: this.themeRoute,
+        animationsEnabled: this.animationsEnabled,
+        soundEnabled: this.soundEnabled,
       };
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(data));
+    },
+
+    setThemeRoute(route: string) {
+      this.themeRoute = route;
+      this.persist();
+    },
+
+    setAnimationsEnabled(enabled: boolean) {
+      this.animationsEnabled = enabled;
+      this.persist();
+    },
+
+    setSoundEnabled(enabled: boolean) {
+      this.soundEnabled = enabled;
+      this.persist();
     },
 
     async reset() {

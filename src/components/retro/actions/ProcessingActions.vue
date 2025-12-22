@@ -130,6 +130,7 @@ import { openPath } from "@tauri-apps/plugin-opener";
 import { useSplitterToolStore } from "@/stores/splitter-tool.store";
 import { useAudioCoreStore } from "@/stores/audio-core.store";
 import { useStemsAudioStore } from "@/stores/stems-audio.store";
+import { useToast } from "@/composables/useToast";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import CassetteScrew from "@/components/retro/cassette/CassetteScrew.vue";
 
@@ -143,19 +144,18 @@ const props = defineProps<Props>();
 const splitterStore = useSplitterToolStore();
 const audioStore = useAudioCoreStore();
 const stemsAudioStore = useStemsAudioStore();
+const toast = useToast();
 
 async function handleOpenFolder() {
   if (!props.outputPath) {
-    console.error("No output path available");
+    toast.error("No output path available");
     return;
   }
 
   try {
-    console.log("🔍 Opening folder:", props.outputPath);
     await openPath(props.outputPath);
   } catch (error) {
-    console.error("❌ Failed to open output folder:", error);
-    alert(`Failed to open folder: ${error}`);
+    toast.error("Failed to open output folder. Please navigate manually.");
   }
 }
 

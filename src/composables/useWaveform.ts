@@ -80,7 +80,6 @@ export function useWaveform(containerRef: Ref<HTMLElement | null>, options: Wave
       if (error?.name === 'AbortError') {
         return;
       }
-      console.error('Failed to load waveform:', error);
       isLoading.value = false;
       hasError.value = true;
       onError?.(error);
