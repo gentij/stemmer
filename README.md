@@ -17,6 +17,14 @@ A beautiful desktop application for separating audio tracks into individual stem
 
 _Coming soon - Screenshots and demos will be added here_
 
+## Download
+
+👉 **[Download the latest release](https://github.com/gentij/stemmer/releases/latest)**
+
+### macOS
+
+- Apple Silicon
+
 ## Installation
 
 ### Prerequisites

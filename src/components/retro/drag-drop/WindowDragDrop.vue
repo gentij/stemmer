@@ -31,7 +31,7 @@ interface Props {
   theme: CassetteTheme;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const emit = defineEmits<{
   (e: "fileDropped", path: string): void;
