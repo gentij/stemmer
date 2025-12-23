@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create_release:
+    name: Create GitHub Release (from template)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release_id: ${{ steps.create.outputs.release_id }}
+      version: ${{ steps.vars.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag
+        id: vars
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"          # e.g. v0.1.0
+          VERSION="${TAG#v}"               # -> 0.1.0
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Render release notes from RELEASE_TEMPLATE.md
+        id: notes
+        shell: bash
+        run: |
+          VERSION="${{ steps.vars.outputs.version }}"
+          # Replace all occurrences of X.Y.Z in your template
+          sed "s/X\.Y\.Z/${VERSION}/g" RELEASE_TEMPLATE.md > RELEASE_NOTES.md
+
+          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+          cat RELEASE_NOTES.md >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create (or update) release
+        id: create
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          TITLE="Stemmer ${TAG}"
+
+          # If release already exists, fetch its id; otherwise create it.
+          if gh release view "$TAG" --json id >/dev/null 2>&1; then
+            RID="$(gh release view "$TAG" --json id -q .id)"
+            gh release edit "$TAG" --title "$TITLE" --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$TAG" \
+              --title "$TITLE" \
+              --notes-file RELEASE_NOTES.md
+            RID="$(gh release view "$TAG" --json id -q .id)"
+          fi
+
+          echo "release_id=$RID" >> "$GITHUB_OUTPUT"
+
+  build_and_upload:
+    name: Build (${{ matrix.platform }})
+    needs: create_release
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: '--bundles msi'
+          - platform: ubuntu-22.04
+            args: '--bundles deb,appimage'
+          - platform: macos-latest
+            args: '--target aarch64-apple-darwin --bundles dmg'
+          - platform: macos-latest
+            args: '--target x86_64-apple-darwin --bundles dmg'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Cache cargo builds
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build + upload bundles to existing release
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          releaseId: ${{ needs.create_release.outputs.release_id }}
+          tagName: ${{ github.ref_name }}
+          args: ${{ matrix.args }}
