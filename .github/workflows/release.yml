@@ -130,4 +130,5 @@ jobs:
         with:
           releaseId: ${{ needs.create_release.outputs.release_id }}
           tagName: ${{ github.ref_name }}
+          releaseName: Stemmer ${{ github.ref_name }}
           args: ${{ matrix.args }}
