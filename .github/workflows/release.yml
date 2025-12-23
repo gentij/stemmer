@@ -31,12 +31,21 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ steps.vars.outputs.version }}"
-          # Replace all occurrences of X.Y.Z in your template
-          sed "s/X\.Y\.Z/${VERSION}/g" .github/RELEASE_TEMPLATE.md > RELEASE_NOTES.md
+          TEMPLATE_PATH=".github/RELEASE_TEMPLATE.md"
+
+          if [ ! -f "$TEMPLATE_PATH" ]; then
+            echo "Release template not found at $TEMPLATE_PATH"
+            echo "Files in .github:"
+            ls -la .github || true
+            exit 1
+          fi
+
+          sed "s/X\.Y\.Z/${VERSION}/g" "$TEMPLATE_PATH" > RELEASE_NOTES.md
 
           echo "notes<<EOF" >> "$GITHUB_OUTPUT"
           cat RELEASE_NOTES.md >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+
 
       - name: Create (or update) release
         id: create
@@ -116,7 +125,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build + upload bundles to existing release
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
