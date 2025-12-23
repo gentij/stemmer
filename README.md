@@ -13,17 +13,38 @@ A beautiful desktop application for separating audio tracks into individual stem
 - 📁 Recent files support
 - ⚙️ Customizable settings
 
-## Screenshots & Demos
+## Screenshots & Demo
 
-_Coming soon - Screenshots and demos will be added here_
+Stemmer features a **retro cassette-inspired UI**, with multiple color themes inspired by classic synthwave and analog aesthetics.
+
+### 🎥 Demo Video (Retro Theme)
+
+👉 [Watch the demo video](https://github.com/gentij/stemmer/releases/download/v0.1.1/demo-retro.mp4)
+
+### 🎨 Retro Theme – Color Variants
+
+Each screenshot below showcases the **retro theme** in a different color palette:
+
+- **Purple Dream**
+- **Ocean Blue**
+- **Sunset Orange**
+- **Mint Green**
+- **Hot Pink**
+
+| Theme | Preview |
+|-----|--------|
+| Purple Dream | ![Purple Dream](https://github.com/gentij/stemmer/releases/download/v0.1.1/stemmer_purple_dream.png) |
+| Ocean Blue | ![Ocean Blue](https://github.com/gentij/stemmer/releases/download/v0.1.1/stemmer_ocean_blue.png) |
+| Sunset Orange | ![Sunset Orange](https://github.com/gentij/stemmer/releases/download/v0.1.1/stemmer_sunset_orange.png) |
+| Mint Green | ![Mint Green](https://github.com/gentij/stemmer/releases/download/v0.1.1/stemmer_mint_green.png) |
+| Hot Pink | ![Hot Pink](https://github.com/gentij/stemmer/releases/download/v0.1.1/stemmer_hot_pink.png) |
+
+> ℹ️ **Note**: The retro theme is just one of the available visual styles.  
+> Stemmer is designed to support additional themes in the future.
 
 ## Download
 
 👉 **[Download the latest release](https://github.com/gentij/stemmer/releases/latest)**
-
-### macOS
-
-- Apple Silicon
 
 ## Installation
 

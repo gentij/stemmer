@@ -111,9 +111,9 @@
                   <div
                     class="w-3 h-3 rounded-full border-2 transition-all"
                     :style="{
-                      borderColor: step.active ? theme.borderColor : theme.controlBorder,
-                      backgroundColor: step.active ? theme.borderColor : 'transparent',
-                      boxShadow: step.active ? `0 0 8px ${theme.borderColor}60` : 'none',
+                      borderColor: step.active ? theme.borderColor : `${theme.borderColor}40`,
+                      backgroundColor: step.active ? theme.borderColor : `${theme.borderColor}15`,
+                      boxShadow: step.active ? `0 0 8px ${theme.borderColor}60` : `0 0 2px ${theme.borderColor}20`,
                     }"
                   >
                     <div
@@ -125,8 +125,8 @@
                   <span
                     class="text-xs font-mono text-center"
                     :style="{
-                      color: step.active ? theme.tapeAccent : theme.controlBorder,
-                      opacity: step.active ? 1 : 0.5,
+                      color: step.active ? theme.tapeAccent : `${theme.borderColor}70`,
+                      opacity: step.active ? 1 : 0.7,
                     }"
                   >
                     {{ step.label }}
