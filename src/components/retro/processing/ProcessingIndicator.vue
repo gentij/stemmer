@@ -69,31 +69,71 @@
           </div>
 
           <div class="space-y-2">
-            <div class="flex items-center justify-between text-xs text-white/70 mb-1">
-              <span class="font-mono">{{ progressLabel }}</span>
-              <span class="font-mono font-bold" :style="{ color: theme.borderColor }">
-                {{ progressValue }}%
-              </span>
-            </div>
-            <div
-              class="h-3 md:h-4 rounded-full overflow-hidden border"
-              :style="{
-                borderColor: theme.controlBorder,
-                backgroundColor: theme.controlBg,
-              }"
-            >
+            <!-- Progress bar for downloading and writing (where we have actual progress) -->
+            <template v-if="status === 'downloading' || status === 'writing'">
+              <div class="flex items-center justify-between text-xs text-white/70 mb-1">
+                <span class="font-mono">{{ progressLabel }}</span>
+                <span class="font-mono font-bold" :style="{ color: theme.borderColor }">
+                  {{ progressValue }}%
+                </span>
+              </div>
               <div
-                class="h-full transition-all duration-300 ease-out relative"
+                class="h-3 md:h-4 rounded-full overflow-hidden border"
                 :style="{
-                  width: `${progressValue}%`,
-                  background: `linear-gradient(90deg, ${theme.borderColor} 0%, ${theme.tapeAccent} 100%)`,
+                  borderColor: theme.controlBorder,
+                  backgroundColor: theme.controlBg,
                 }"
               >
                 <div
-                  class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
-                ></div>
+                  class="h-full transition-all duration-300 ease-out relative"
+                  :style="{
+                    width: `${progressValue}%`,
+                    background: `linear-gradient(90deg, ${theme.borderColor} 0%, ${theme.tapeAccent} 100%)`,
+                  }"
+                >
+                  <div
+                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
+                  ></div>
+                </div>
               </div>
-            </div>
+            </template>
+            
+            <template v-else-if="status === 'processing'">
+              <div class="flex items-center justify-between text-xs text-white/70 mb-3">
+                <span class="font-mono">{{ progressLabel }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div
+                  v-for="(step, index) in processingSteps"
+                  :key="index"
+                  class="flex-1 flex flex-col items-center gap-2"
+                >
+                  <div
+                    class="w-3 h-3 rounded-full border-2 transition-all"
+                    :style="{
+                      borderColor: step.active ? theme.borderColor : theme.controlBorder,
+                      backgroundColor: step.active ? theme.borderColor : 'transparent',
+                      boxShadow: step.active ? `0 0 8px ${theme.borderColor}60` : 'none',
+                    }"
+                  >
+                    <div
+                      v-if="step.active"
+                      class="w-full h-full rounded-full animate-pulse"
+                      :style="{ backgroundColor: theme.tapeAccent }"
+                    ></div>
+                  </div>
+                  <span
+                    class="text-xs font-mono text-center"
+                    :style="{
+                      color: step.active ? theme.tapeAccent : theme.controlBorder,
+                      opacity: step.active ? 1 : 0.5,
+                    }"
+                  >
+                    {{ step.label }}
+                  </span>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -111,7 +151,7 @@
               :style="{ backgroundColor: theme.borderColor }"
             ></div>
             <p class="text-white/90 text-xs md:text-sm font-mono">
-              {{ formattedStage }}
+              {{ humanFriendlyMessage }}
             </p>
           </div>
         </div>
@@ -187,16 +227,64 @@ const showCancelButton = computed(() => {
   return props.status === "downloading" || props.status === "processing" || props.status === "writing";
 });
 
-const formattedStage = computed(() => {
-  if (!props.currentStage) return "";
+const processingSteps = computed(() => {
+  const stage = props.currentStage?.toLowerCase() || "";
   
-  const stage = props.currentStage
+  const steps = [
+    { label: "Load", active: stage.includes("load") || stage.includes("preprocess") || stage.includes("resolve") || (!stage && props.status === "processing") },
+    { label: "Analyze", active: stage.includes("analyze") || stage.includes("read") || stage.includes("engine") },
+    { label: "Separate", active: stage.includes("separate") || stage.includes("infer") || stage.includes("extract") },
+    { label: "Prepare", active: stage.includes("prepare") || stage.includes("postprocess") || stage.includes("finalize") },
+  ];
+  
+  if (!stage && props.status === "processing") {
+    return steps.map((s, i) => ({ ...s, active: i === 0 }));
+  }
+  
+  return steps;
+});
+
+const humanFriendlyMessage = computed(() => {
+  if (!props.currentStage) {
+    return "Initializing audio processing...";
+  }
+  
+  const stage = props.currentStage.toLowerCase();
+  
+  const stageMessages: Record<string, string> = {
+    "resolve_model": "Loading AI model into memory",
+    "engine_preload": "Preparing audio processing engine",
+    "read_audio": "Reading and analyzing audio file",
+    "infer": "Separating audio into individual stems",
+    "preprocess": "Preparing audio for analysis",
+    "postprocess": "Finalizing separated stems",
+  };
+  
+  if (stageMessages[stage]) {
+    return stageMessages[stage];
+  }
+  
+  if (stage.includes("resolve")) {
+    return "Loading AI model";
+  }
+  if (stage.includes("engine") || stage.includes("preload")) {
+    return "Initializing processing engine";
+  }
+  if (stage.includes("read")) {
+    return "Reading audio file";
+  }
+  if (stage.includes("infer") || stage.includes("separate")) {
+    return "Separating audio stems";
+  }
+  if (stage.includes("prepare") || stage.includes("postprocess")) {
+    return "Preparing final output";
+  }
+  
+  return stage
     .replace(/_/g, " ")
     .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
-  
-  return `> ${stage}`;
 });
 
 defineEmits<{

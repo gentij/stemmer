@@ -2,14 +2,14 @@
   <Motion
     as="div"
     :key="audioSrc || stem.id"
-    :initial="{ opacity: 0, y: 20 }"
+    :initial="animationsEnabled ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }"
     :animate="{ opacity: 1, y: 0 }"
-    :transition="{
+    :transition="animationsEnabled ? {
       type: 'spring',
       stiffness: 260,
       damping: 20,
       delay: stemIndex * 0.1
-    }"
+    } : { duration: 0 }"
     class="flex flex-col gap-3 p-4 rounded-2xl border-2 relative z-10"
     :style="{
       borderColor: stemColor,
@@ -47,10 +47,12 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { Motion } from "motion-v";
+import { storeToRefs } from "pinia";
 import type { Stem } from "@/types/stems.interface";
 import type { CassetteTheme } from "@/types/retro/cassete.interface";
 import { defaultCassetteTheme } from "@/constants/retro/cassete";
 import { useStemControls } from "@/composables/useStemControls";
+import { useSettingsStore } from "@/stores/settings.store";
 import StemSlider from "./StemSlider.vue";
 import StemMuteButton from "./StemMuteButton.vue";
 import StemWaveform from "./StemWaveform.vue";
@@ -65,6 +67,9 @@ const props = withDefaults(defineProps<Props>(), {
   theme: () => defaultCassetteTheme,
   stemIndex: 0,
 });
+
+const settingsStore = useSettingsStore();
+const { animationsEnabled } = storeToRefs(settingsStore);
 
 const { audioSrc, setVolumeDirectly, setVolume, toggleMute } = useStemControls({
   stemId: props.stem.id,

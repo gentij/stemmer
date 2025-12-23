@@ -1,9 +1,9 @@
 <template>
   <div class="w-full space-y-4">
-    <div class="flex items-center justify-center gap-3">
+    <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
       <button
         @click="handleMuteAll"
-        class="px-4 py-2 rounded-lg border-2 transition-all hover:scale-105 flex items-center gap-2 backdrop-blur-md shadow-xl"
+        class="px-4 py-2 rounded-lg border-2 transition-all hover:scale-105 flex items-center justify-center gap-2 backdrop-blur-md shadow-xl"
         :style="{
           borderColor: `${theme.borderColor}`,
           backgroundColor: allMuted ? `${theme.borderColor}60` : 'rgba(0, 0, 0, 0.85)',
@@ -30,7 +30,7 @@
 
       <button
         @click="handleToggleLock"
-        class="px-4 py-2 rounded-lg border-2 transition-all hover:scale-105 flex items-center gap-2 backdrop-blur-md shadow-xl"
+        class="px-4 py-2 rounded-lg border-2 transition-all hover:scale-105 flex items-center justify-center gap-2 backdrop-blur-md shadow-xl"
         :style="{
           borderColor: volumesLocked ? theme.tapeAccent : theme.borderColor,
           backgroundColor: volumesLocked ? `${theme.tapeAccent}70` : 'rgba(0, 0, 0, 0.85)',
