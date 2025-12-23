@@ -32,7 +32,7 @@ jobs:
         run: |
           VERSION="${{ steps.vars.outputs.version }}"
           # Replace all occurrences of X.Y.Z in your template
-          sed "s/X\.Y\.Z/${VERSION}/g" RELEASE_TEMPLATE.md > RELEASE_NOTES.md
+          sed "s/X\.Y\.Z/${VERSION}/g" .github/RELEASE_TEMPLATE.md > RELEASE_NOTES.md
 
           echo "notes<<EOF" >> "$GITHUB_OUTPUT"
           cat RELEASE_NOTES.md >> "$GITHUB_OUTPUT"
