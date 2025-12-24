@@ -58,7 +58,7 @@ Each screenshot below showcases the **retro theme** in a different color palette
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/gentij/stemmer.git
 cd stemmer
 
 # Install dependencies
@@ -84,7 +84,8 @@ Stemmer uses [stem-splitter-core](https://github.com/gentij/stem-splitter-core) 
 
 ## License
 
-[Add your license here]
+MIT License © 2025 Gentrit Jashari  
+See the [LICENSE](./LICENSE) file for details.
 
 ## Credits
 
