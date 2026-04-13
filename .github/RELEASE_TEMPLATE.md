@@ -32,8 +32,6 @@ improvements to split performance and acceleration reliability.
 
 - **macOS (Apple Silicon / arm64):**
   - `Stemmer_X.Y.Z_aarch64.dmg`
-- **macOS (Intel / x64):**
-  - `Stemmer_X.Y.Z_x64.dmg`
 - **Windows:**
   - `.msi`
 - **Linux:**
@@ -46,6 +44,7 @@ improvements to split performance and acceleration reliability.
 
 - Acceleration setting changes require restarting Stemmer before the next split
 - Depending on your machine and model, `CPU only` may still be faster than GPU-backed acceleration
+- Intel macOS builds are not currently published with the current ONNX Runtime setup; macOS releases target Apple Silicon
 
 ### ⚠️ macOS Security Notice
 
