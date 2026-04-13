@@ -1,19 +1,84 @@
+use serde::Deserialize;
+use std::fs;
+use std::path::Path;
 use stem_splitter_core::{split_file, SplitOptions, SplitProgress};
 use tauri::{AppHandle, Emitter};
-use std::path::Path;
-use std::fs;
 
-pub async fn split(app: AppHandle, input: String, output: String) -> Result<String, String> {
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccelerationSettings {
+    pub mode: AccelerationMode,
+    pub preferred_provider: PreferredProvider,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AccelerationMode {
+    Auto,
+    Cpu,
+    Provider,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum PreferredProvider {
+    Cuda,
+    Coreml,
+    Directml,
+    Onednn,
+    Xnnpack,
+}
+
+impl PreferredProvider {
+    fn as_env_value(&self) -> &'static str {
+        match self {
+            Self::Cuda => "cuda",
+            Self::Coreml => "coreml",
+            Self::Directml => "directml",
+            Self::Onednn => "onednn",
+            Self::Xnnpack => "xnnpack",
+        }
+    }
+}
+
+fn apply_acceleration_settings(settings: &AccelerationSettings) {
+    match settings.mode {
+        AccelerationMode::Auto => {
+            std::env::remove_var("STEMMER_FORCE_CPU");
+            std::env::remove_var("STEMMER_EP_FORCE");
+        }
+        AccelerationMode::Cpu => {
+            std::env::set_var("STEMMER_FORCE_CPU", "1");
+            std::env::remove_var("STEMMER_EP_FORCE");
+        }
+        AccelerationMode::Provider => {
+            std::env::remove_var("STEMMER_FORCE_CPU");
+            std::env::set_var(
+                "STEMMER_EP_FORCE",
+                settings.preferred_provider.as_env_value(),
+            );
+        }
+    }
+}
+
+pub async fn split(
+    app: AppHandle,
+    input: String,
+    output: String,
+    acceleration: AccelerationSettings,
+) -> Result<String, String> {
+    apply_acceleration_settings(&acceleration);
+
     let input_path = Path::new(&input);
     let file_stem = input_path
         .file_stem()
         .and_then(|s| s.to_str())
         .unwrap_or("output");
-    
+
     let base_output_path = Path::new(&output);
     let final_output_path = base_output_path.join(file_stem);
     let final_output = final_output_path.to_string_lossy().to_string();
-    
+
     if !base_output_path.exists() {
         match fs::create_dir_all(base_output_path) {
             Ok(_) => eprintln!("  ✅ Base directory created successfully"),
@@ -26,18 +91,20 @@ pub async fn split(app: AppHandle, input: String, output: String) -> Result<Stri
             }
         }
     }
-    
+
     match fs::create_dir_all(&final_output_path) {
         Ok(_) => eprintln!("  ✅ Project folder created successfully"),
         Err(e) => {
             eprintln!("  ❌ Failed to create project folder: {:?}", e);
             return Err(format!(
-                "Failed to create project folder '{}': {}. \n\nError code: {}", 
-                final_output, e, e.kind()
+                "Failed to create project folder '{}': {}. \n\nError code: {}",
+                final_output,
+                e,
+                e.kind()
             ));
         }
     }
-    
+
     let test_file = final_output_path.join(".stemmer_write_test");
     match fs::write(&test_file, b"test") {
         Ok(_) => {

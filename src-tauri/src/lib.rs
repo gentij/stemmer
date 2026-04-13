@@ -1,5 +1,5 @@
-mod modules;
 mod commands;
+mod modules;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -12,11 +12,15 @@ pub fn run() {
             // Custom audio:// protocol with CORS headers for WaveSurfer
             tauri::async_runtime::spawn(async move {
                 let uri_str = request.uri().to_string();
-                
-                let encoded_path = if let Some(stripped) = uri_str.strip_prefix("audio://localhost") {
+
+                let encoded_path = if let Some(stripped) = uri_str.strip_prefix("audio://localhost")
+                {
                     stripped.to_string()
                 } else {
-                    uri_str.split("://").nth(1).unwrap_or("")
+                    uri_str
+                        .split("://")
+                        .nth(1)
+                        .unwrap_or("")
                         .trim_start_matches("localhost")
                         .to_string()
                 };
@@ -29,7 +33,7 @@ pub fn run() {
                         let path = decoded_str.trim_start_matches('/').to_string();
                         #[cfg(not(target_os = "windows"))]
                         let path = decoded_str;
-                        
+
                         path
                     }
                     Err(e) => {
@@ -37,7 +41,7 @@ pub fn run() {
                         encoded_path
                     }
                 };
-                
+
                 match tokio::fs::read(&path).await {
                     Ok(data) => {
                         let content_type = if path.ends_with(".mp3") {
@@ -61,7 +65,10 @@ pub fn run() {
                             .header("Access-Control-Allow-Origin", "*")
                             .header("Access-Control-Allow-Methods", "GET, OPTIONS, HEAD")
                             .header("Access-Control-Allow-Headers", "*")
-                            .header("Access-Control-Expose-Headers", "Content-Length, Content-Type, Accept-Ranges")
+                            .header(
+                                "Access-Control-Expose-Headers",
+                                "Content-Length, Content-Type, Accept-Ranges",
+                            )
                             .header("Content-Type", content_type)
                             .header("Content-Length", data.len().to_string())
                             .header("Accept-Ranges", "bytes")

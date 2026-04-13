@@ -152,7 +152,11 @@ export const useSplitterToolStore = defineStore("splitterTool", {
       try {
         const result = await splitStems({ 
           input, 
-          output: settingsStore.outputDirectory 
+          output: settingsStore.outputDirectory,
+          acceleration: {
+            mode: settingsStore.accelerationMode,
+            preferredProvider: settingsStore.preferredProvider,
+          },
         });
         
         const isNotTerminalState = !["finished", "error"].includes(this.status as ProcessingStatus);

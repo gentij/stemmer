@@ -1,12 +1,17 @@
 import { defineStore } from "pinia";
 import { documentDir, join } from "@tauri-apps/api/path";
 
+export type AccelerationMode = "auto" | "cpu" | "provider";
+export type PreferredProvider = "cuda" | "coreml" | "directml" | "onednn" | "xnnpack";
+
 interface SettingsState {
   outputDirectory: string;
   isInitialized: boolean;
   themeRoute: string;
   animationsEnabled: boolean;
   soundEnabled: boolean;
+  accelerationMode: AccelerationMode;
+  preferredProvider: PreferredProvider;
 }
 
 const SETTINGS_STORAGE_KEY = "stemmer-settings";
@@ -18,6 +23,8 @@ export const useSettingsStore = defineStore("settings", {
     themeRoute: "retro-cassette",
     animationsEnabled: true,
     soundEnabled: true,
+    accelerationMode: "auto",
+    preferredProvider: "cuda",
   }),
 
   getters: {
@@ -38,6 +45,12 @@ export const useSettingsStore = defineStore("settings", {
           this.themeRoute = parsed.themeRoute || "retro-cassette";
           this.animationsEnabled = parsed.animationsEnabled !== undefined ? parsed.animationsEnabled : true;
           this.soundEnabled = parsed.soundEnabled !== undefined ? parsed.soundEnabled : true;
+          this.accelerationMode = isAccelerationMode(parsed.accelerationMode)
+            ? parsed.accelerationMode
+            : "auto";
+          this.preferredProvider = isPreferredProvider(parsed.preferredProvider)
+            ? parsed.preferredProvider
+            : "cuda";
         } catch (error) {
           console.error("Failed to parse stored settings:", error);
         }
@@ -69,6 +82,8 @@ export const useSettingsStore = defineStore("settings", {
         themeRoute: this.themeRoute,
         animationsEnabled: this.animationsEnabled,
         soundEnabled: this.soundEnabled,
+        accelerationMode: this.accelerationMode,
+        preferredProvider: this.preferredProvider,
       };
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(data));
     },
@@ -88,6 +103,16 @@ export const useSettingsStore = defineStore("settings", {
       this.persist();
     },
 
+    setAccelerationMode(mode: AccelerationMode) {
+      this.accelerationMode = mode;
+      this.persist();
+    },
+
+    setPreferredProvider(provider: PreferredProvider) {
+      this.preferredProvider = provider;
+      this.persist();
+    },
+
     async reset() {
       localStorage.removeItem(SETTINGS_STORAGE_KEY);
       this.outputDirectory = "";
@@ -98,3 +123,16 @@ export const useSettingsStore = defineStore("settings", {
   },
 });
 
+function isAccelerationMode(value: unknown): value is AccelerationMode {
+  return value === "auto" || value === "cpu" || value === "provider";
+}
+
+function isPreferredProvider(value: unknown): value is PreferredProvider {
+  return (
+    value === "cuda" ||
+    value === "coreml" ||
+    value === "directml" ||
+    value === "onednn" ||
+    value === "xnnpack"
+  );
+}

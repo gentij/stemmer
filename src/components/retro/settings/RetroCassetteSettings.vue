@@ -11,16 +11,30 @@ import BrandingSection from "./BrandingSection.vue";
 import ThemeSelector from "./ThemeSelector.vue";
 import BehaviorControls from "./BehaviorControls.vue";
 import OutputDirectoryPanel from "./OutputDirectoryPanel.vue";
+import AccelerationPanel from "./AccelerationPanel.vue";
+import type { AccelerationMode, PreferredProvider } from "@/stores/settings.store";
 
 const router = useRouter();
 const settingsStore = useSettingsStore();
-const { outputDirectory, themeRoute, animationsEnabled, soundEnabled } = storeToRefs(settingsStore);
-const { setOutputDirectory, setThemeRoute, setAnimationsEnabled, setSoundEnabled } = settingsStore;
+const { outputDirectory, themeRoute, animationsEnabled, soundEnabled, accelerationMode, preferredProvider } = storeToRefs(settingsStore);
+const { setOutputDirectory, setThemeRoute, setAnimationsEnabled, setSoundEnabled, setAccelerationMode, setPreferredProvider } = settingsStore;
 const toast = useToast();
 const { currentTheme } = useRetroCassetteTheme();
 
 const availableThemes = [
   { value: "retro-cassette", label: "Retro Cassette", description: "Classic cassette player aesthetic" },
+];
+
+const providerOptions: Array<{
+  value: PreferredProvider;
+  label: string;
+  hint: string;
+}> = [
+  { value: "cuda", label: "CUDA", hint: "Best for NVIDIA GPUs on Linux and Windows." },
+  { value: "coreml", label: "CoreML", hint: "Apple Silicon acceleration on macOS." },
+  { value: "directml", label: "DirectML", hint: "Windows GPU acceleration across vendors." },
+  { value: "onednn", label: "oneDNN", hint: "CPU optimizations, especially useful on x86 systems." },
+  { value: "xnnpack", label: "XNNPACK", hint: "Fast CPU-side fallback, especially useful on ARM systems." },
 ];
 
 const hasProblematicPath = computed(() => {
@@ -66,6 +80,16 @@ const handleAnimationsToggle = (enabled: boolean) => {
 const handleSoundToggle = (enabled: boolean) => {
   setSoundEnabled(enabled);
   toast.info(enabled ? "Sounds enabled" : "Sounds disabled");
+};
+
+const handleAccelerationModeChange = (mode: AccelerationMode) => {
+  setAccelerationMode(mode);
+  toast.info("Acceleration setting saved. Restart Stemmer to apply.");
+};
+
+const handlePreferredProviderChange = (provider: PreferredProvider) => {
+  setPreferredProvider(provider);
+  toast.info("Preferred provider saved. Restart Stemmer to apply.");
 };
 
 const handleResetOutputDirectory = async () => {
@@ -145,6 +169,15 @@ const uniqueId = Math.random().toString(36).slice(2);
           @sound-toggle="handleSoundToggle"
         />
 
+        <AccelerationPanel
+          :theme="currentTheme"
+          :acceleration-mode="accelerationMode"
+          :preferred-provider="preferredProvider"
+          :provider-options="providerOptions"
+          @acceleration-mode-change="handleAccelerationModeChange"
+          @preferred-provider-change="handlePreferredProviderChange"
+        />
+
         <OutputDirectoryPanel
           :theme="currentTheme"
           :output-directory="outputDirectory"
@@ -156,4 +189,3 @@ const uniqueId = Math.random().toString(36).slice(2);
     </div>
   </div>
 </template>
-
