@@ -28,4 +28,15 @@ tauri-plugin-dialog = "^2"
 http = "1"
 tokio = { version = "1", features = ["fs"] }
 urlencoding = "2"
-stem-splitter-core = "1.2.0"
+
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+stem-splitter-core = { version = "1.2.0", default-features = false, features = ["coreml", "xnnpack"] }
+
+[target.'cfg(all(target_os = "macos", target_arch = "x86_64"))'.dependencies]
+stem-splitter-core = { version = "1.2.0", default-features = false, features = ["xnnpack"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+stem-splitter-core = { version = "1.2.0", default-features = false, features = ["cuda", "directml", "onednn", "xnnpack"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+stem-splitter-core = { version = "1.2.0", default-features = false, features = ["cuda", "onednn", "xnnpack"] }
